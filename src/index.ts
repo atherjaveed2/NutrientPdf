@@ -53,8 +53,16 @@ if (fileInput) {
         if (instance) {
           PSPDFKit.unload(instance);
           instance = null;
+          const parent = document.getElementById("text-container");
+          if (parent) {
+            parent.innerHTML = "";
+          }
         } else {
           PSPDFKit.unload(viewerContainer);
+          const parent = document.getElementById("text-container");
+          if (parent) {
+            parent.innerHTML = "";
+          }
         }
       }
 
