@@ -3,13 +3,15 @@ import PSPDFKit from "@nutrient-sdk/viewer";
 
 let instance: any = null;
 let highlightedElement: HTMLElement | null = null; 
+let objectUrl = "";
 
+// Create the left panel for extracted text
 function createLeftPanel() {
   const leftPanel = document.createElement("div");
-  leftPanel.id = "left-panel"; // Set an ID for styling later
-  leftPanel.style.width = "250px"; // Set the left panel width
-  leftPanel.style.height = "100vh"; // Full height of the viewport
-  leftPanel.style.overflowY = "auto"; // Allow scrolling if content exceeds height
+  leftPanel.id = "left-panel"; 
+  leftPanel.style.width = "250px"; 
+  leftPanel.style.height = "100vh"; 
+  leftPanel.style.overflowY = "auto"; 
   leftPanel.style.padding = "10px";
   leftPanel.style.backgroundColor = "#f4f4f4";
   leftPanel.style.borderRight = "1px solid #ccc";
@@ -17,53 +19,63 @@ function createLeftPanel() {
   // Create file input and add it to the left panel
   const fileInput = document.createElement("input");
   fileInput.type = "file";
+  fileInput.id="fileInput";
   fileInput.className = "chooseFile";
-  fileInput.accept = "application/pdf";
-  fileInput.style.marginBottom = "10px"; // Add some space below the input
+  fileInput.title="";
+  fileInput.accept = ".pdf,.doc,.docx";
+  fileInput.style.marginBottom = "10px"; 
 
-  // Add event listener for file input change
-  fileInput.addEventListener("change", function (event: HTMLInputEvent) {
-    if (event.target && event.target.files instanceof FileList) {
-      PSPDFKit.unload(".container");
+  leftPanel.appendChild(fileInput); 
+  leftPanel.innerHTML += "<h3>Extracted Text</h3>";
+  const textContainer = document.createElement("div");
+  textContainer.id = "text-container";
+  leftPanel.appendChild(textContainer); 
+
+  document.body.appendChild(leftPanel);
+}
+createLeftPanel();
+
+// Create the PSPDFKit viewer container on the right
+const viewerContainer = document.createElement("div");
+viewerContainer.id = "viewer-container";
+viewerContainer.classList.add("viewer-container");
+viewerContainer.style.flexGrow = "1";
+
+document.body.appendChild(viewerContainer);
+
+const fileInput = document.getElementById("fileInput");
+if (fileInput) {
+  fileInput.addEventListener("change", async (event: Event) => {
+    const target = event.target as HTMLInputElement;
+    if (target && target.files && target.files.length > 0) {
+      const viewerContainer = document.getElementById("viewer-container");
+      if (viewerContainer) {
+        if (instance) {
+          PSPDFKit.unload(instance);
+          instance = null;
+        } else {
+          PSPDFKit.unload(viewerContainer);
+        }
+      }
 
       if (objectUrl) {
         URL.revokeObjectURL(objectUrl);
       }
 
-      objectUrl = URL.createObjectURL(event.target.files[0]);
+      objectUrl = URL.createObjectURL(target.files[0]);
       load(objectUrl);
     }
   });
-
-  leftPanel.appendChild(fileInput); // Add file input to the left panel
-  leftPanel.innerHTML += "<h3>Extracted Text</h3>";
-  const textContainer = document.createElement("div");
-  textContainer.id = "text-container";
-  leftPanel.appendChild(textContainer); // Add text container to the left panel
-
-  document.body.appendChild(leftPanel);
 }
 
 function load(pdfDocument: string) {
   console.log(`Loading ${pdfDocument}...`);
   
-  // Create the left panel for extracted text
-  createLeftPanel();
-
   // Apply flexbox to create the layout
   document.body.style.display = "flex";
-  document.body.style.flexDirection = "row"; // Align items side by side
-  document.body.style.margin = "0"; // Remove default margin
-  document.body.style.padding = "0"; // Remove default padding
-
-  const container = document.createElement("div");
-  container.classList.add("container");
-
-  // Create the PSPDFKit viewer container on the right
-  const viewerContainer = document.createElement("div");
-  viewerContainer.classList.add("viewer-container");
-  viewerContainer.style.flexGrow = "1"; // Allow it to take up remaining space
-
+  document.body.style.flexDirection = "row"; 
+  document.body.style.margin = "0"; 
+  document.body.style.padding = "0"; 
   document.body.appendChild(viewerContainer);
 
   PSPDFKit.load({
@@ -74,107 +86,110 @@ function load(pdfDocument: string) {
       { 
         type: "redact-rectangle",
         className: "redactRectangle",
-        
       }, 
       {
         type: "custom",
         id: "apply-redactions",
         title: "Apply All Redactions",
-         className: "applyRedactions",
+        className: "applyRedactions",
         onPress: () => {
+          console.log("Applying redactions...");
           instance.applyRedactions();
-          const parent=document.getElementById("text-container");
-          parent.innerHTML="";
+          const parent = document.getElementById("text-container");
+          if (parent) {
+            parent.innerHTML = "";
+          }
         }
       },
       {
-        type:"export-pdf",
-        title:"Download",
-        icon:null,
+        type: "export-pdf",
+        title: "Download",
+        icon: null,
       },
     ],
     styleSheets: [
-      "index.css" // or local CSS file
+      "index.css" 
     ]
   })
-    .then((_instance) => {
-      instance = _instance;
-      _instance.addEventListener("annotations.change", () => {
-        console.log(`${pdfDocument} loaded!`);
-      });
+  .then((_instance) => {
+    instance = _instance;
+    _instance.addEventListener("annotations.change", () => {
+      console.log(`${pdfDocument} loaded!`);
+    });
 
-      _instance.setViewState(viewState => (
-        viewState.set("keepSelectedTool", true)
-     ));
+    _instance.setViewState(viewState => (
+      viewState.set("keepSelectedTool", true)
+    ));
 
-      // Set up redaction event listener
-      _instance.addEventListener("annotations.create", async (createdAnnotations) => {
-        for (const annotation of createdAnnotations) {
-          if (annotation instanceof PSPDFKit.Annotations.RedactionAnnotation) {
-            const text = await instance.getMarkupAnnotationText(annotation);
-            const redactionId = annotation.id;
+    // Set up redaction event listener
+    _instance.addEventListener("annotations.create", async (createdAnnotations) => {
+      console.log("Annotations created", createdAnnotations);
+      for (const annotation of createdAnnotations) {
+        if (annotation instanceof PSPDFKit.Annotations.RedactionAnnotation) {
+          const text = await instance.getMarkupAnnotationText(annotation);
+          const redactionId = annotation.id;
             const pageIndex=annotation.pageIndex;
             const rect=annotation.boundingBox;
 
-            // Display the extracted text on the left panel
-            const textContainer = document.getElementById("text-container") as HTMLElement;
-            if (textContainer) {
-              const textElement = document.createElement("div");
-              textElement.textContent = text;
-              textElement.id=redactionId;
-              textElement.style.display = "flex"; // Use flexbox for alignment
-              textElement.style.justifyContent = "space-between"; // Space between text and button
-              textElement.style.alignItems = "center"; // Center align items vertically
+          // Display the extracted text on the left panel
+          const textContainer = document.getElementById("text-container") as HTMLElement;
+          if (textContainer) {
+            const textElement = document.createElement("div");
+            textElement.textContent = text;
+            textElement.id = redactionId;
+            textElement.style.display = "flex"; 
+            textElement.style.justifyContent = "space-between"; 
+            textElement.style.alignItems = "center"; 
 
+            const trashButton = document.createElement("button");
+            trashButton.innerHTML = '<i class="fas fa-trash"></i>'; 
+            trashButton.className = "trash-button"; 
+            trashButton.style.cursor = "pointer"; 
 
-              const trashButton = document.createElement("button");
-              trashButton.innerHTML = '<i class="fas fa-trash"></i>'; // Font Awesome trash icon
-              trashButton.className = "trash-button"; // Add a class for styling
-              trashButton.style.cursor = "pointer"; // Change cursor to pointer
+            trashButton.addEventListener("click", () => {
+              handleTrashClick(redactionId);
+            });
 
-              trashButton.addEventListener("click", () => {
-                handleTrashClick(redactionId);
-              });
+            textElement.appendChild(trashButton);
 
-              textElement.appendChild(trashButton);
+            // Add click event listener to the text element
+            textElement.style.cursor = "pointer"; 
+            textElement.addEventListener("click", (e: MouseEvent) => {
+              selectAnnotationById(redactionId,pageIndex,rect);
+              e.stopPropagation(); 
 
-              // Add click event listener to the text element
-              textElement.style.cursor = "pointer"; // Change cursor to pointer
-              textElement.addEventListener("click", (e: MouseEvent) => {
-                selectAnnotationById(redactionId,pageIndex,rect);
-                e.stopPropagation(); // Prevent the click event from bubbling up to the document
+              // Remove highlight from the previously highlighted element
+              if (highlightedElement) {
+                highlightedElement.classList.remove("highlight");
+              }
 
-                // Remove highlight from the previously highlighted element
-                if (highlightedElement) {
-                  highlightedElement.classList.remove("highlight");
-                }
+              // Highlight the clicked text element
+              highlightedElement = textElement;
+              highlightedElement.classList.add("highlight");
+            });
 
-                // Highlight the clicked text element
-                highlightedElement = textElement;
-                highlightedElement.classList.add("highlight");
-              });
-
-              textContainer.appendChild(textElement);
-            }
+            textContainer.appendChild(textElement);
           }
         }
-      });
-    })
-    .catch(console.error);
+      }
+    });
+  })
+  .catch(console.error);
 }
 
 function handleTrashClick(annotationId: string) {
   if (instance) {
     instance.delete(annotationId);
   }
-  const textDiv= document.getElementById(annotationId);
-  textDiv.remove();
+  const textDiv = document.getElementById(annotationId);
+  if (textDiv) {
+    textDiv.remove();
+  }
 }
-
 document.addEventListener("click", () => {
   if (highlightedElement) {
     highlightedElement.classList.remove("highlight");
-    highlightedElement = null; // Reset the highlighted element
+    highlightedElement = null;
   }
 });
 
@@ -185,11 +200,9 @@ function selectAnnotationById(annotationId: string, pageIndex:number, rect: any)
   }, 100);
 }
 
-interface HTMLInputEvent extends Event {
-  target: HTMLInputElement & EventTarget;
-}
-
-let objectUrl = "";
+// interface HTMLInputEvent extends Event {
+//   target: HTMLInputElement & EventTarget;
+// }
 
 // Load the initial document
 load("example.pdf");
