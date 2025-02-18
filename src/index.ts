@@ -71,32 +71,6 @@ function load(pdfDocument: string) {
     container: viewerContainer,
     baseUrl: "",
     toolbarItems: [
-      {
-        type: "custom",
-        title: "Random redaction",
-        className: "randomRedaction",
-        onPress: () => {
-          if (!instance) return;
-
-          // Get page 0 dimensions
-          const { width, height } = instance.pageInfoForIndex(0);
-          // Create a redaction annotation in page 0 with random position and dimensions
-          const left = Math.random() * (width - PSPDFKit.Options.MIN_SHAPE_ANNOTATION_SIZE);
-          const top = Math.random() * (height - PSPDFKit.Options.MIN_SHAPE_ANNOTATION_SIZE);
-          
-          const redaction = new PSPDFKit.Annotations.RedactionAnnotation({
-            pageIndex: 0,
-            boundingBox: new PSPDFKit.Geometry.Rect({
-              left,
-              top,
-              width: Math.random() * (width - left),
-              height: Math.random() * (height - top),
-            }),
-          });
-
-          instance.create(redaction);
-        },
-      },
       { 
         type: "redact-rectangle",
         className: "redactRectangle",
@@ -109,7 +83,14 @@ function load(pdfDocument: string) {
          className: "applyRedactions",
         onPress: () => {
           instance.applyRedactions();
+          const parent=document.getElementById("text-container");
+          parent.innerHTML="";
         }
+      },
+      {
+        type:"export-pdf",
+        title:"Download",
+        icon:null,
       },
     ],
     styleSheets: [
@@ -131,10 +112,9 @@ function load(pdfDocument: string) {
         for (const annotation of createdAnnotations) {
           if (annotation instanceof PSPDFKit.Annotations.RedactionAnnotation) {
             const text = await instance.getMarkupAnnotationText(annotation);
-            console.log("Text behind redaction:", text);
-
             const redactionId = annotation.id;
-            // console.log("Redaction annotation ID:", redactionId);
+            const pageIndex=annotation.pageIndex;
+            const rect=annotation.boundingBox;
 
             // Display the extracted text on the left panel
             const textContainer = document.getElementById("text-container") as HTMLElement;
@@ -161,8 +141,7 @@ function load(pdfDocument: string) {
               // Add click event listener to the text element
               textElement.style.cursor = "pointer"; // Change cursor to pointer
               textElement.addEventListener("click", (e: MouseEvent) => {
-                selectAnnotationById(redactionId);
-
+                selectAnnotationById(redactionId,pageIndex,rect);
                 e.stopPropagation(); // Prevent the click event from bubbling up to the document
 
                 // Remove highlight from the previously highlighted element
@@ -199,10 +178,11 @@ document.addEventListener("click", () => {
   }
 });
 
-function selectAnnotationById(annotationId: string) {
-  if (instance) {
+function selectAnnotationById(annotationId: string, pageIndex:number, rect: any) {
+  instance.jumpToRect(pageIndex, rect);
+  setTimeout(() => {
     instance.setSelectedAnnotations(annotationId);
-  }
+  }, 100);
 }
 
 interface HTMLInputEvent extends Event {
