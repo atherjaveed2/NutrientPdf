@@ -136,8 +136,8 @@ function load(pdfDocument: string) {
         if (annotation instanceof PSPDFKit.Annotations.RedactionAnnotation) {
           const text = await instance.getMarkupAnnotationText(annotation);
           const redactionId = annotation.id;
-            const pageIndex=annotation.pageIndex;
-            const rect=annotation.boundingBox;
+          const pageIndex=annotation.pageIndex;
+          const rect=annotation.boundingBox;
 
           // Display the extracted text on the left panel
           const textContainer = document.getElementById("text-container") as HTMLElement;
@@ -154,8 +154,9 @@ function load(pdfDocument: string) {
             trashButton.className = "trash-button"; 
             trashButton.style.cursor = "pointer"; 
 
-            trashButton.addEventListener("click", () => {
-              handleTrashClick(redactionId);
+            trashButton.addEventListener("click", async (e) => {
+              e.stopPropagation();
+              await handleTrashClick(textElement.id);
             });
 
             textElement.appendChild(trashButton);
@@ -185,15 +186,17 @@ function load(pdfDocument: string) {
   .catch(console.error);
 }
 
-function handleTrashClick(annotationId: string) {
+async function handleTrashClick(annotationId: string) {
   if (instance) {
-    instance.delete(annotationId);
+    const textDiv = document.getElementById(annotationId);
+    if (textDiv) {
+      textDiv.remove();
+    }
+    await instance.delete(annotationId);
   }
-  const textDiv = document.getElementById(annotationId);
-  if (textDiv) {
-    textDiv.remove();
-  }
+
 }
+
 document.addEventListener("click", () => {
   if (highlightedElement) {
     highlightedElement.classList.remove("highlight");
