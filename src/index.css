@@ -50,6 +50,7 @@ body {
   cursor: pointer; /* Pointer cursor for better UX */
   color: #3409a1; /* Red color for the trash icon */
   font-size: 16px; /* Font size for the icon */
+  padding: 5px; /* Add padding to the button */
 }
 
 
@@ -118,4 +119,22 @@ body {
 
 .PSPDFKit-Toolbar .redactRectangle {
   margin-left: 0; /* Directly adjacent to Random */
+}
+
+/* Resizer styles */
+.resizer {
+  background-color: #ccc; /* Light gray background for visibility */
+  cursor: col-resize; /* Cursor style for resizing */
+  display: flex; /* Flexbox for centering */
+  align-items: center; /* Center vertically */
+  justify-content: center; /* Center horizontally */
+}
+
+/* Optional: Add a grab handle effect */
+.resizer::before {
+  content: ""; /* Empty content for the pseudo-element */
+  width: 5px; /* Width of the grab handle */
+  height: 20px; /* Height of the grab handle */
+  background-color: #888; /* Darker gray for contrast */
+  border-radius: 5px; /* Rounded corners for the grab handle */
 }
