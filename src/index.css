@@ -16,6 +16,7 @@ body {
   background-color: #f4f4f4; /* Light gray background */
   border-right: 1px solid #ccc; /* Light border for separation */
 }
+
 #left-panel h3 {
   margin-top: 0; /* Remove default margin for the heading */
 }
@@ -31,6 +32,9 @@ body {
 
 #text-container {
   margin-top: 10px; /* Space above the text container */
+  max-height: calc(100vh - 60px); /* Adjust based on your layout */
+  overflow-y: auto; /* Allow scrolling */
+  padding: 5px; /* Padding for better spacing */
 }
 
 #text-container div {
@@ -50,8 +54,9 @@ body {
   cursor: pointer; /* Pointer cursor for better UX */
   color: #3409a1; /* Red color for the trash icon */
   font-size: 16px; /* Font size for the icon */
+  padding: 5px; /* Add padding to the button */
+  transition: color 0.2s ease; /* Smooth transition for hover effect */
 }
-
 
 .trash-button:hover {
   color: #0d7f94; /* Darker red on hover */
@@ -106,11 +111,6 @@ body {
   order: 2; /* Explicit right placement */
 }
 
-/* .PSPDFKit-Toolbar .download-pdf {
-  margin-left: 600px;
-  
-}  */
-
 /* Specific spacing adjustments */
 .PSPDFKit-Toolbar .randomRedaction {
   margin-right: 3px; /* Small gap to Rectangle */
@@ -118,4 +118,22 @@ body {
 
 .PSPDFKit-Toolbar .redactRectangle {
   margin-left: 0; /* Directly adjacent to Random */
+}
+
+/* Resizer styles */
+.resizer {
+  background-color: #ccc; /* Light gray background for visibility */
+  cursor: col-resize; /* Cursor style for resizing */
+  display: flex; /* Flexbox for centering */
+  align-items: center; /* Center vertically */
+  justify-content: center; /* Center horizontally */
+}
+
+/* Optional: Add a grab handle effect */
+.resizer::before {
+  content: ""; /* Empty content for the pseudo-element */
+  width: 5px; /* Width of the grab handle */
+  height: 20px; /* Height of the grab handle */
+  background-color: #888; /* Darker gray for contrast */
+  border-radius: 5px; /* Rounded corners for the grab handle */
 }

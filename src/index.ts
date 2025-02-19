@@ -15,13 +15,14 @@ function createLeftPanel() {
   leftPanel.style.padding = "10px";
   leftPanel.style.backgroundColor = "#f4f4f4";
   leftPanel.style.borderRight = "1px solid #ccc";
+  leftPanel.style.position = "relative"; // Set position to relative for the resizer
 
   // Create file input and add it to the left panel
   const fileInput = document.createElement("input");
   fileInput.type = "file";
-  fileInput.id="fileInput";
+  fileInput.id = "fileInput";
   fileInput.className = "chooseFile";
-  fileInput.title="";
+  fileInput.title = "";
   fileInput.accept = ".pdf,.doc,.docx";
   fileInput.style.marginBottom = "10px"; 
 
@@ -30,6 +31,38 @@ function createLeftPanel() {
   const textContainer = document.createElement("div");
   textContainer.id = "text-container";
   leftPanel.appendChild(textContainer); 
+
+  // Create a resizer element
+  const resizer = document.createElement("div");
+  resizer.id = "resizer"; // Add an ID for styling
+  resizer.className = "resizer";
+  resizer.style.width = "10px"; // Width of the resizer
+  resizer.style.cursor = "ew-resize"; // Cursor style for resizing
+  resizer.style.position = "absolute";
+  resizer.style.top = "0";
+  resizer.style.right = "-5px"; // Position it outside the sidebar
+  resizer.style.height = "100%";
+  resizer.style.zIndex = "10"; // Ensure it's above other elements
+  leftPanel.appendChild(resizer);
+
+  // Add event listeners for resizing
+  resizer.addEventListener("mousedown", (e) => {
+    e.preventDefault();
+    document.addEventListener("mousemove", resizePanel);
+    document.addEventListener("mouseup", stopResize);
+  });
+
+  function resizePanel(e: MouseEvent) {
+    const newWidth = e.clientX; // Get the new width based on mouse position
+    if (newWidth > 150 && newWidth < window.innerWidth - 50) { 
+        leftPanel.style.width = `${newWidth}px`;
+    }
+  }
+
+  function stopResize() {
+    document.removeEventListener("mousemove", resizePanel);
+    document.removeEventListener("mouseup", stopResize);
+  }
 
   document.body.appendChild(leftPanel);
 }
@@ -136,8 +169,8 @@ function load(pdfDocument: string) {
         if (annotation instanceof PSPDFKit.Annotations.RedactionAnnotation) {
           const text = await instance.getMarkupAnnotationText(annotation);
           const redactionId = annotation.id;
-          const pageIndex=annotation.pageIndex;
-          const rect=annotation.boundingBox;
+          const pageIndex = annotation.pageIndex;
+          const rect = annotation.boundingBox;
 
           // Display the extracted text on the left panel
           const textContainer = document.getElementById("text-container") as HTMLElement;
@@ -164,7 +197,7 @@ function load(pdfDocument: string) {
             // Add click event listener to the text element
             textElement.style.cursor = "pointer"; 
             textElement.addEventListener("click", (e: MouseEvent) => {
-              selectAnnotationById(redactionId,pageIndex,rect);
+              selectAnnotationById(redactionId, pageIndex, rect);
               e.stopPropagation(); 
 
               // Remove highlight from the previously highlighted element
@@ -178,6 +211,7 @@ function load(pdfDocument: string) {
             });
 
             textContainer.appendChild(textElement);
+            textContainer.scrollTop = textContainer.scrollHeight;
           }
         }
       }
@@ -194,7 +228,6 @@ async function handleTrashClick(annotationId: string) {
     }
     await instance.delete(annotationId);
   }
-
 }
 
 document.addEventListener("click", () => {
@@ -204,16 +237,12 @@ document.addEventListener("click", () => {
   }
 });
 
-function selectAnnotationById(annotationId: string, pageIndex:number, rect: any) {
+function selectAnnotationById(annotationId: string, pageIndex: number, rect: any) {
   instance.jumpToRect(pageIndex, rect);
   setTimeout(() => {
     instance.setSelectedAnnotations(annotationId);
   }, 100);
 }
-
-// interface HTMLInputEvent extends Event {
-//   target: HTMLInputElement & EventTarget;
-// }
 
 // Load the initial document
 load("example.pdf");
