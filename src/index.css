@@ -16,6 +16,7 @@ body {
   background-color: #f4f4f4; /* Light gray background */
   border-right: 1px solid #ccc; /* Light border for separation */
 }
+
 #left-panel h3 {
   margin-top: 0; /* Remove default margin for the heading */
 }
@@ -31,6 +32,9 @@ body {
 
 #text-container {
   margin-top: 10px; /* Space above the text container */
+  max-height: calc(100vh - 60px); /* Adjust based on your layout */
+  overflow-y: auto; /* Allow scrolling */
+  padding: 5px; /* Padding for better spacing */
 }
 
 #text-container div {
@@ -51,8 +55,8 @@ body {
   color: #3409a1; /* Red color for the trash icon */
   font-size: 16px; /* Font size for the icon */
   padding: 5px; /* Add padding to the button */
+  transition: color 0.2s ease; /* Smooth transition for hover effect */
 }
-
 
 .trash-button:hover {
   color: #0d7f94; /* Darker red on hover */
@@ -106,11 +110,6 @@ body {
   margin-left: auto; /* Forces to right edge */
   order: 2; /* Explicit right placement */
 }
-
-/* .PSPDFKit-Toolbar .download-pdf {
-  margin-left: 600px;
-  
-}  */
 
 /* Specific spacing adjustments */
 .PSPDFKit-Toolbar .randomRedaction {

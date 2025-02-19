@@ -211,6 +211,7 @@ function load(pdfDocument: string) {
             });
 
             textContainer.appendChild(textElement);
+            textContainer.scrollTop = textContainer.scrollHeight;
           }
         }
       }
