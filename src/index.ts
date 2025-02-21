@@ -28,11 +28,41 @@ function createLeftPanel() {
 
   leftPanel.appendChild(fileInput);
 
+  // Create a container div for redaction input and button
+  const redactionContainer = document.createElement("div");
+  redactionContainer.style.display = "flex"; // Set to flex for responsive layout
+  redactionContainer.style.flexDirection = "column"; // Stack items vertically
+  redactionContainer.style.marginTop = "10px"; // Add margin for spacing
+
+  // Create an input field
+  const inputField = document.createElement("input");
+  inputField.type = "text";
+  inputField.placeholder = "Enter text...";
+  inputField.id = "redactionInput";
+  inputField.style.padding = "5px";
+  inputField.style.flexGrow = "1"; // Allow the input to grow
+
+  // Create the button
+  const markRedaction = document.createElement("button");
+  markRedaction.innerText = "Mark Redactions";
+  markRedaction.id = "markRedaction";
+  markRedaction.style.padding = "5px 10px";
+  markRedaction.style.cursor = "pointer";
+  markRedaction.style.marginTop = "5px"; // Add margin for spacing
+
+  // Append input and button to the container
+  redactionContainer.appendChild(inputField);
+  redactionContainer.appendChild(markRedaction);
+
+  // Append the container to the left panel
+  leftPanel.appendChild(redactionContainer);
+
   // Create the Add Automatic Redactions button
   const addRedactionsButton = document.createElement("button");
   addRedactionsButton.innerText = "Add Automatic Redactions";
   addRedactionsButton.id = "addRedactionsButton";
   addRedactionsButton.style.marginTop = "10px";
+  addRedactionsButton.style.width = "100%"; // Make button full width
 
   leftPanel.appendChild(addRedactionsButton);
 
@@ -85,6 +115,22 @@ viewerContainer.style.flexGrow = "1";
 
 document.body.appendChild(viewerContainer);
 
+const markRedaction = document.getElementById("markRedaction");
+if(markRedaction){
+  markRedaction.onclick = () =>{
+    const inputText = (document.getElementById("redactionInput") as HTMLInputElement).value;
+    (document.getElementById("redactionInput") as HTMLInputElement).value="";
+
+    if (inputText.trim() === "") {
+      alert("Please enter text before marking redactions.");
+      return;
+    }
+    instance.createRedactionsBySearch(inputText, {
+      searchInAnnotations: false
+    })
+  }
+}
+
 const addAutoRedaction = document.getElementById("addRedactionsButton");
 if (addAutoRedaction) {
   addAutoRedaction.onclick = () => {
@@ -98,7 +144,7 @@ if (addAutoRedaction) {
     ];
 
     redactions.forEach((coords) => {
-      createRedactionFromCoordinates.apply(null, coords);
+      createRedactionFromCoordinates(...coords);
     });
 
     // createRedactionFromCoordinates(0,70.4688796680498, 253.12655601659753, 79.42531120331944, 35.65767634854774 )

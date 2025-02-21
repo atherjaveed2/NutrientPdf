@@ -15,6 +15,7 @@ body {
   padding: 10px;
   background-color: #f4f4f4; /* Light gray background */
   border-right: 1px solid #ccc; /* Light border for separation */
+  box-sizing: border-box;
 }
 
 #left-panel h3 {
@@ -31,21 +32,26 @@ body {
 }
 
 #text-container {
-  margin-top: 10px; /* Space above the text container */
-  max-height: calc(100vh - 60px); /* Adjust based on your layout */
-  overflow-y: auto; /* Allow scrolling */
-  padding: 5px; /* Padding for better spacing */
+  max-height: calc(100vh - 60px); /* Adjust based on actual available space */
+  overflow-y: auto;
+  padding: 10px;
+  margin-bottom: 10px; /* Ensure there is space at the bottom */
+  word-wrap: break-word;
+  box-sizing: border-box;
 }
 
+
 #text-container div {
-  display: flex; /* Use flexbox for alignment */
-  justify-content: space-between; /* Space between text and button */
-  align-items: center; /* Center align items vertically */
-  padding: 5px; /* Add some padding */
-  margin-bottom: 10px; /* Space between each text element */
-  background-color: #e0f7fa; /* Light background color */
-  border-radius: 5px; /* Rounded corners */
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+  padding: 5px;
+  margin: 5px 0;
+  background-color: #95cff3;
+  border-radius: 4px;
+  box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.2);
+  max-width: 100%; /* Prevent overflow */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  word-break: break-word;
 }
 
 .trash-button {
