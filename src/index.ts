@@ -5,6 +5,8 @@ let instance: any = null;
 let highlightedElement: HTMLElement | null = null;
 let objectUrl = "";
 
+const redactionTexts = ["Hello", "This", "sample"];
+
 // Create the left panel for extracted text
 function createLeftPanel() {
   const leftPanel = document.createElement("div");
@@ -35,23 +37,23 @@ function createLeftPanel() {
   redactionContainer.style.marginTop = "10px"; // Add margin for spacing
 
   // Create an input field
-  const inputField = document.createElement("input");
-  inputField.type = "text";
-  inputField.placeholder = "Enter text...";
-  inputField.id = "redactionInput";
-  inputField.style.padding = "5px";
-  inputField.style.flexGrow = "1"; // Allow the input to grow
+  // const inputField = document.createElement("input");
+  // inputField.type = "text";
+  // inputField.placeholder = "Enter text...";
+  // inputField.id = "redactionInput";
+  // inputField.style.padding = "5px";
+  // inputField.style.flexGrow = "1"; // Allow the input to grow
 
   // Create the button
   const markRedaction = document.createElement("button");
-  markRedaction.innerText = "Mark Redactions";
+  markRedaction.innerText = "Add Automatic Text Redactions";
   markRedaction.id = "markRedaction";
   markRedaction.style.padding = "5px 10px";
   markRedaction.style.cursor = "pointer";
   markRedaction.style.marginTop = "5px"; // Add margin for spacing
 
   // Append input and button to the container
-  redactionContainer.appendChild(inputField);
+  // redactionContainer.appendChild(inputField);
   redactionContainer.appendChild(markRedaction);
 
   // Append the container to the left panel
@@ -59,7 +61,7 @@ function createLeftPanel() {
 
   // Create the Add Automatic Redactions button
   const addRedactionsButton = document.createElement("button");
-  addRedactionsButton.innerText = "Add Automatic Redactions";
+  addRedactionsButton.innerText = "Add Automatic Coordinates Redactions";
   addRedactionsButton.id = "addRedactionsButton";
   addRedactionsButton.style.marginTop = "10px";
   addRedactionsButton.style.width = "100%"; // Make button full width
@@ -115,21 +117,34 @@ viewerContainer.style.flexGrow = "1";
 
 document.body.appendChild(viewerContainer);
 
-const markRedaction = document.getElementById("markRedaction");
-if(markRedaction){
-  markRedaction.onclick = () =>{
-    const inputText = (document.getElementById("redactionInput") as HTMLInputElement).value;
-    (document.getElementById("redactionInput") as HTMLInputElement).value="";
+// const markRedaction = document.getElementById("markRedaction");
+// if(markRedaction){
+//   markRedaction.onclick = () =>{
+//     const inputText = (document.getElementById("redactionInput") as HTMLInputElement).value;
+//     (document.getElementById("redactionInput") as HTMLInputElement).value="";
 
-    if (inputText.trim() === "") {
-      alert("Please enter text before marking redactions.");
-      return;
-    }
-    instance.createRedactionsBySearch(inputText, {
-      searchInAnnotations: false
-    })
+//     if (inputText.trim() === "") {
+//       alert("Please enter text before marking redactions.");
+//       return;
+//     }
+//     instance.createRedactionsBySearch(inputText, {
+//       searchInAnnotations: false
+//     })
+//   }
+// }
+
+
+const markRedaction = document.getElementById("markRedaction");
+if (markRedaction) {
+  markRedaction.onclick = () => {
+    redactionTexts.forEach(text => {
+      instance.createRedactionsBySearch(text, {
+        searchInAnnotations: false
+      });
+    });
   }
 }
+
 
 const addAutoRedaction = document.getElementById("addRedactionsButton");
 if (addAutoRedaction) {
