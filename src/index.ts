@@ -133,24 +133,47 @@ if(markRedaction){
 
 const addAutoRedaction = document.getElementById("addRedactionsButton");
 if (addAutoRedaction) {
-  addAutoRedaction.onclick = () => {
-    const redactions: [number, number, number, number, number][] = [
-      [
-        0, 70.4688796680498, 253.12655601659753, 79.42531120331944,
-        35.65767634854774,
-      ],
-      [0, 120.5, 260.3, 85.4, 40.2],
-      [0, 50.1, 200.2, 60.5, 30.5],
-    ];
-
-    redactions.forEach((coords) => {
-      createRedactionFromCoordinates(...coords);
-    });
-
-    // createRedactionFromCoordinates(0,70.4688796680498, 253.12655601659753, 79.42531120331944, 35.65767634854774 )
-  };
+ addAutoRedaction.onclick = () => {
+   const textractCoordsArray = [
+   {
+    left: 0.381551206111908,
+    top: 0.190794214606285,
+    width: 0.0353992618620396,
+    height: 0.00814286060631275,
+   },
+   {
+    left: 0.643598735332489,
+    top: 0.220295235514641,
+    width: 0.0651193782687187,
+    height: 0.00848869420588017,
+   },
+   {
+    left: 0.136710092425346,
+    top: 0.267800241708755,
+    width: 0.0360120497643948,
+    height: 0.00837974902242422,
+   },
+   ];
+   const pageIndex = 0; // Assuming redactions are on the first page
+   const pageInfo = instance.pageInfoForIndex(pageIndex);
+   const pageWidth = pageInfo.width;
+   const pageHeight = pageInfo.height;
+   // Function to convert Textract coordinates to PSPDFKit coordinates
+   function convertToPSPDFKitCoords(textractCoords: any, pageWidth: number, pageHeight: number) {
+   return {
+    left: textractCoords.left * pageWidth,
+    top: textractCoords.top * pageHeight,
+    width: textractCoords.width * pageWidth,
+    height: textractCoords.height * pageHeight,
+   };
+   }
+   // Loop through the array and create redactions
+   textractCoordsArray.forEach((textractCoords) => {
+   const pspdfkitCoords = convertToPSPDFKitCoords(textractCoords, pageWidth, pageHeight);
+   createRedactionFromCoordinates(pageIndex, pspdfkitCoords.left, pspdfkitCoords.top, pspdfkitCoords.width, pspdfkitCoords.height);
+   });
+ };
 }
-
 const fileInput = document.getElementById("fileInput");
 if (fileInput) {
   fileInput.addEventListener("change", async (event: Event) => {
