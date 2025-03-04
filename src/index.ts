@@ -101,6 +101,68 @@ function createLeftPanel() {
  document.removeEventListener("mouseup", stopResize);
  }
  document.body.appendChild(leftPanel);
+
+  // Create the toggle view button
+  const toggleViewButton = document.createElement("button");
+  toggleViewButton.innerText = "Toggle View Mode";
+  toggleViewButton.id = "toggleViewButton";
+  toggleViewButton.style.marginTop = "10px";
+  toggleViewButton.style.width = "100%"; // Make button full width
+  
+  leftPanel.appendChild(toggleViewButton);
+
+
+
+// Toggle view button functionality
+toggleViewButton.onclick = () => {
+  // Get the current view state
+  const currentViewState = instance.viewState;
+
+  // Determine the current scroll mode
+  const currentScrollMode = currentViewState.scrollMode;
+
+  // Toggle the scroll mode
+  const newScrollMode = currentScrollMode === PSPDFKit.ScrollMode.CONTINUOUS
+    ? PSPDFKit.ScrollMode.DISABLED
+    : PSPDFKit.ScrollMode.CONTINUOUS;
+
+  // Keep the current page index and zoom level
+  const currentPageIndex = currentViewState.currentPageIndex;
+  const zoomLevel = currentViewState.zoomLevel; // Keep the current zoom level
+
+  // Update the view state with the new scroll mode, lock to the current page, and set the zoom level
+  const newViewState = currentViewState
+    .set("scrollMode", newScrollMode)
+    .set("currentPageIndex", currentPageIndex)
+    .set("zoomLevel", zoomLevel); // Maintain the current zoom level
+
+  // Update the viewer with the new view state
+  instance.setViewState(newViewState);
+};
+
+
+ // Create the rotate clockwise button
+ const rotateClockwiseButton = document.createElement("button");
+ rotateClockwiseButton.innerText = "Rotate Clockwise";
+ rotateClockwiseButton.id = "rotateClockwise";
+ rotateClockwiseButton.style.marginTop = "10px";
+ rotateClockwiseButton.style.width = "100%"; // Make button full width
+ leftPanel.appendChild(rotateClockwiseButton);
+
+ // Create the rotate counterclockwise button
+ const rotateCounterclockwiseButton = document.createElement("button");
+ rotateCounterclockwiseButton.innerText = "Rotate Counterclockwise";
+ rotateCounterclockwiseButton.id = "rotateCounterclockwise";
+ rotateCounterclockwiseButton.style.marginTop = "10px";
+ rotateCounterclockwiseButton.style.width = "100%"; // Make button full width
+ leftPanel.appendChild(rotateCounterclockwiseButton);
+
+ // Add event listeners to the rotation buttons
+ rotateClockwiseButton.addEventListener("click", rotatePageClockwise);
+ rotateCounterclockwiseButton.addEventListener("click", rotatePageCounterclockwise);
+
+
+
 }
 createLeftPanel();
 // Create the PSPDFKit viewer container on the right
@@ -259,6 +321,12 @@ if (fileInput) {
  }
  });
 }
+
+// Initialize the ViewState
+let viewState = new PSPDFKit.ViewState({
+  scrollMode: PSPDFKit.ScrollMode.CONTINUOUS, // or PSPDFKit.ScrollMode.CONTINUOUS
+});
+
 function load(pdfDocument: string) {
  console.log(`Loading ${pdfDocument}...`); // Apply flexbox to create the layout
  document.body.style.display = "flex";
@@ -269,6 +337,7 @@ function load(pdfDocument: string) {
  PSPDFKit.load({
  document: pdfDocument,
  container: viewerContainer,
+ initialViewState: viewState,
  baseUrl: "",
  toolbarItems: [
   {
@@ -720,6 +789,30 @@ function createRedactionFromCoordinates(
  const updatedAnnotaion = redaction.set("customData", { category });
  instance.create(updatedAnnotaion);
 }
+
+function rotatePageClockwise() {
+  const currentPageIndex = instance.viewState.currentPageIndex;
+  instance.applyOperations([
+    {
+      type: "rotatePages",
+      pageIndexes: [currentPageIndex],
+      rotateBy: 90 // Rotate 90 degrees clockwise
+    }
+  ]);
+}
+
+// Function to rotate the current page counterclockwise
+function rotatePageCounterclockwise() {
+  const currentPageIndex = instance.viewState.currentPageIndex;
+  instance.applyOperations([
+    {
+      type: "rotatePages",
+      pageIndexes: [currentPageIndex],
+      rotateBy: -90 // Rotate 90 degrees counterclockwise
+    }
+  ]);
+}
+
 // Example usage of createRedactionFromCoordinates
 // You can call this function with the desired parameters when needed
 // createRedactionFromCoordinates(pageIndex, left, top, width, height);
