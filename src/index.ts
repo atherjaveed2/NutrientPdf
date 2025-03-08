@@ -1,9 +1,9 @@
-/* eslint-disable no-irregular-whitespace */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import PSPDFKit from "@nutrient-sdk/viewer";
+import PSPDFKit, { ViewState } from "@nutrient-sdk/viewer";
+import { title } from "process";
 let instance: any = null;
 let highlightedElement: HTMLElement | null = null;
 let objectUrl = "";
+let currentZoomPercentage = "100%";
 const redactionTexts = [
  "when the 11yo SB was two years old",
  "Based on the evidence that was gathered during the course of the investigation, there was not sufficient evidence to substantiate the allegation",
@@ -46,13 +46,7 @@ function createLeftPanel() {
  redactionContainer.style.display = "flex"; // Set to flex for responsive layout
  redactionContainer.style.flexDirection = "column"; // Stack items vertically
  redactionContainer.style.marginTop = "10px"; // Add margin for spacing
- // Create an input field
- // const inputField = document.createElement("input");
- // inputField.type = "text";
- // inputField.placeholder = "Enter text...";
- // inputField.id = "redactionInput";
- // inputField.style.padding = "5px";
- // inputField.style.flexGrow = "1"; // Allow the input to grow
+
  // Create the button
  const markRedaction = document.createElement("button");
  markRedaction.innerText = "Add Automatic Text Redactions";
@@ -93,7 +87,7 @@ function createLeftPanel() {
  function resizePanel(e: MouseEvent) {
  const newWidth = e.clientX; // Get the new width based on mouse position
  if (newWidth > 150 && newWidth < window.innerWidth - 50) {
-  leftPanel.style.width = `${newWidth}px`;
+ leftPanel.style.width = `${newWidth}px`;
  }
  }
  function stopResize() {
@@ -101,68 +95,6 @@ function createLeftPanel() {
  document.removeEventListener("mouseup", stopResize);
  }
  document.body.appendChild(leftPanel);
-
-  // Create the toggle view button
-  const toggleViewButton = document.createElement("button");
-  toggleViewButton.innerText = "Toggle View Mode";
-  toggleViewButton.id = "toggleViewButton";
-  toggleViewButton.style.marginTop = "10px";
-  toggleViewButton.style.width = "100%"; // Make button full width
-  
-  leftPanel.appendChild(toggleViewButton);
-
-
-
-// Toggle view button functionality
-toggleViewButton.onclick = () => {
-  // Get the current view state
-  const currentViewState = instance.viewState;
-
-  // Determine the current scroll mode
-  const currentScrollMode = currentViewState.scrollMode;
-
-  // Toggle the scroll mode
-  const newScrollMode = currentScrollMode === PSPDFKit.ScrollMode.CONTINUOUS
-    ? PSPDFKit.ScrollMode.DISABLED
-    : PSPDFKit.ScrollMode.CONTINUOUS;
-
-  // Keep the current page index and zoom level
-  const currentPageIndex = currentViewState.currentPageIndex;
-  const zoomLevel = currentViewState.zoomLevel; // Keep the current zoom level
-
-  // Update the view state with the new scroll mode, lock to the current page, and set the zoom level
-  const newViewState = currentViewState
-    .set("scrollMode", newScrollMode)
-    .set("currentPageIndex", currentPageIndex)
-    .set("zoomLevel", zoomLevel); // Maintain the current zoom level
-
-  // Update the viewer with the new view state
-  instance.setViewState(newViewState);
-};
-
-
- // Create the rotate clockwise button
- const rotateClockwiseButton = document.createElement("button");
- rotateClockwiseButton.innerText = "Rotate Clockwise";
- rotateClockwiseButton.id = "rotateClockwise";
- rotateClockwiseButton.style.marginTop = "10px";
- rotateClockwiseButton.style.width = "100%"; // Make button full width
- leftPanel.appendChild(rotateClockwiseButton);
-
- // Create the rotate counterclockwise button
- const rotateCounterclockwiseButton = document.createElement("button");
- rotateCounterclockwiseButton.innerText = "Rotate Counterclockwise";
- rotateCounterclockwiseButton.id = "rotateCounterclockwise";
- rotateCounterclockwiseButton.style.marginTop = "10px";
- rotateCounterclockwiseButton.style.width = "100%"; // Make button full width
- leftPanel.appendChild(rotateCounterclockwiseButton);
-
- // Add event listeners to the rotation buttons
- rotateClockwiseButton.addEventListener("click", rotatePageClockwise);
- rotateCounterclockwiseButton.addEventListener("click", rotatePageCounterclockwise);
-
-
-
 }
 createLeftPanel();
 // Create the PSPDFKit viewer container on the right
@@ -171,39 +103,36 @@ viewerContainer.id = "viewer-container";
 viewerContainer.classList.add("viewer-container");
 viewerContainer.style.flexGrow = "1";
 document.body.appendChild(viewerContainer);
-// const markRedaction = document.getElementById("markRedaction");
-// if(markRedaction){
-// markRedaction.onclick = () =>{
-// const inputText = (document.getElementById("redactionInput") as HTMLInputElement).value;
-// (document.getElementById("redactionInput") as HTMLInputElement).value="";
-// if (inputText.trim() === "") {
-// alert("Please enter text before marking redactions.");
-// return;
-// }
-// instance.createRedactionsBySearch(inputText, {
-// searchInAnnotations: false
-// })
-// }
-// }
+
 const markRedaction = document.getElementById("markRedaction");
 if (markRedaction) {
  markRedaction.onclick = () => {
  redactionTexts.forEach((text) => {
-  instance.createRedactionsBySearch(text, {
-  searchInAnnotations: false,
-  });
+ instance.createRedactionsBySearch(text, {
+ searchInAnnotations: false,
+ });
  });
  };
 }
 const addAutoRedaction = document.getElementById("addRedactionsButton");
-/*if (addAutoRedaction) {
- addAutoRedaction.onclick = () => {
+
+let addAutoRedactionEnable = false;
+if (addAutoRedaction) {
+ addAutoRedaction.onclick = async () => {
+ addAutoRedactionEnable = true;
  if (!uploadedJsonData) {
  alert("Please upload a JSON file first.");
  return;
  }
- uploadedJsonData.forEach((entry: { page: number; coordinates: { Left: number; Top: number; Width: number; Height: number; }; }) => {
+ for (const entry of uploadedJsonData) {
+ await new Promise((resolve) => setTimeout(resolve, 100)); // Delay of 1 second
  const pageIndex = entry.page - 1; // Convert to 0-based index
+ const category = entry.category;
+ const totalPages = instance.totalPageCount;
+ if (pageIndex >= totalPages || pageIndex < 0) {
+ console.warn(`Skipping invalid page index: ${pageIndex}`);
+ continue;
+ }
  const pageInfo = instance.pageInfoForIndex(pageIndex);
  const pageWidth = pageInfo.width;
  const pageHeight = pageInfo.height;
@@ -219,52 +148,13 @@ const addAutoRedaction = document.getElementById("addRedactionsButton");
  redactionCoords.left,
  redactionCoords.top,
  redactionCoords.width,
- redactionCoords.height
+ redactionCoords.height,
+ category
  );
- });
- console.log("Redactions applied from JSON file.");
- alert("Redactions applied successfully!");
- };
-}*/
-let addAutoRedactionEnable = false;
-if (addAutoRedaction) {
- addAutoRedaction.onclick = async () => {
- addAutoRedactionEnable = true;
- if (!uploadedJsonData) {
-  alert("Please upload a JSON file first.");
-  return;
- }
- for (const entry of uploadedJsonData) {
-  await new Promise((resolve) => setTimeout(resolve, 100)); // Delay of 1 second
-  const pageIndex = entry.page - 1; // Convert to 0-based index
-  const category = entry.category;
-  const totalPages = instance.totalPageCount;
-  if (pageIndex >= totalPages || pageIndex < 0) {
-  console.warn(`Skipping invalid page index: ${pageIndex}`);
-  continue;
-  }
-  const pageInfo = instance.pageInfoForIndex(pageIndex);
-  const pageWidth = pageInfo.width;
-  const pageHeight = pageInfo.height;
-  const redactionCoords = {
-  pageIndex,
-  left: entry.coordinates.Left * pageWidth,
-  top: entry.coordinates.Top * pageHeight, // Flip Y-axis
-  width: entry.coordinates.Width * pageWidth,
-  height: entry.coordinates.Height * pageHeight,
-  };
-  createRedactionFromCoordinates(
-  redactionCoords.pageIndex,
-  redactionCoords.left,
-  redactionCoords.top,
-  redactionCoords.width,
-  redactionCoords.height,
-  category
-  );
-  console.log(`Redaction applied to page ${entry.page}`);
+ console.log(`Redaction applied to page ${entry.page}`);
  }
  setTimeout(() => {
-  alert("Redactions applied successfully!");
+ alert("Redactions applied successfully!");
  }, 20);
  addAutoRedactionEnable = false;
  };
@@ -274,20 +164,20 @@ if (fileInputJson) {
  fileInputJson.addEventListener("change", async (event: Event) => {
  const file = (event.target as HTMLInputElement).files?.[0];
  if (file) {
-  const reader = new FileReader();
-  reader.onload = (e) => {
-  try {
-   uploadedJsonData = JSON.parse(e.target?.result as string);
-   console.log("JSON Data Loaded:", uploadedJsonData);
-   alert(
-   "JSON file uploaded! Click 'Add Automatic Coordinates Redactions' to apply."
-   );
-  } catch (error) {
-   console.error("Invalid JSON format", error);
-   alert("Failed to parse JSON file.");
-  }
-  };
-  reader.readAsText(file);
+ const reader = new FileReader();
+ reader.onload = (e) => {
+ try {
+ uploadedJsonData = JSON.parse(e.target?.result as string);
+ console.log("JSON Data Loaded:", uploadedJsonData);
+ alert(
+ "JSON file uploaded! Click 'Add Automatic Coordinates Redactions' to apply."
+ );
+ } catch (error) {
+ console.error("Invalid JSON format", error);
+ alert("Failed to parse JSON file.");
+ }
+ };
+ reader.readAsText(file);
  }
  });
 }
@@ -296,37 +186,35 @@ if (fileInput) {
  fileInput.addEventListener("change", async (event: Event) => {
  const target = event.target as HTMLInputElement;
  if (target && target.files && target.files.length > 0) {
-  const viewerContainer = document.getElementById("viewer-container");
-  if (viewerContainer) {
-  if (instance) {
-   PSPDFKit.unload(instance);
-   instance = null;
-   const parent = document.getElementById("text-container");
-   if (parent) {
-   parent.innerHTML = "";
-   }
-  } else {
-   PSPDFKit.unload(viewerContainer);
-   const parent = document.getElementById("text-container");
-   if (parent) {
-   parent.innerHTML = "";
-   }
-  }
-  }
-  if (objectUrl) {
-  URL.revokeObjectURL(objectUrl);
-  }
-  objectUrl = URL.createObjectURL(target.files[0]);
-  load(objectUrl);
+ const viewerContainer = document.getElementById("viewer-container");
+ if (viewerContainer) {
+ if (instance) {
+ PSPDFKit.unload(instance);
+ instance = null;
+ const parent = document.getElementById("text-container");
+ if (parent) {
+ parent.innerHTML = "";
+ }
+ } else {
+ PSPDFKit.unload(viewerContainer);
+ const parent = document.getElementById("text-container");
+ if (parent) {
+ parent.innerHTML = "";
+ }
+ }
+ }
+ if (objectUrl) {
+ URL.revokeObjectURL(objectUrl);
+ }
+ objectUrl = URL.createObjectURL(target.files[0]);
+ load(objectUrl);
  }
  });
 }
-
 // Initialize the ViewState
 let viewState = new PSPDFKit.ViewState({
-  scrollMode: PSPDFKit.ScrollMode.CONTINUOUS, // or PSPDFKit.ScrollMode.CONTINUOUS
+ scrollMode: PSPDFKit.ScrollMode.CONTINUOUS, // or PSPDFKit.ScrollMode.CONTINUOUS
 });
-
 function load(pdfDocument: string) {
  console.log(`Loading ${pdfDocument}...`); // Apply flexbox to create the layout
  document.body.style.display = "flex";
@@ -338,180 +226,240 @@ function load(pdfDocument: string) {
  document: pdfDocument,
  container: viewerContainer,
  initialViewState: viewState,
+ printOptions: {
+ quality: PSPDFKit.PrintQuality.HIGH // Set to MEDIUM or HIGH as needed
+},
  baseUrl: "",
  toolbarItems: [
+    {
+        type:"sidebar-thumbnails"
+    },
+    {
+        type: "document-editor"
+    },
+ {
+ type: "redact-rectangle",
+ className: "redactRectangle",
+ },
+ {
+ type: "custom",
+ id: "apply-redactions",
+ title: "Apply All Redactions",
+ className: "applyRedactions",
+ onPress: () => {
+ console.log("Applying redactions...");
+ instance.applyRedactions();
+ const parent = document.getElementById("text-container");
+ if (parent) {
+ parent.innerHTML = "";
+ }
+ },
+ },
+ {
+ type: "export-pdf",
+ title: "Download",
+ icon: null,
+ },
+ {
+ type: "zoom-in", // Use custom type if "zoom-in" is not predefined
+ id: "zoom-in-button", // Unique identifier for the custom item
+ title: "Zoom In", // Title displayed on the button
+ onPress: () => {
+  console.log("Zooming in...");
+  instance.setViewState((viewState: { zoomIn: () => any; }) => viewState.zoomIn());
+ }
+ },
+ {
+ type: "zoom-out", // Use custom type if "zoom-in" is not predefined
+ id: "zoom-out-button", // Unique identifier for the custom item
+ title: "Zoom Out", // Title displayed on the button
+ onPress: () => {
+  console.log("Zooming out...");
+  instance.setViewState((viewState: { zoomOut: () => any; }) => viewState.zoomOut());
+ }
+ },
+ {
+ type: "custom", // Use custom type for the rotation button
+ id: "rotate-page-counterclockwise-button", // Unique identifier for the custom item
+ title: "Rotate Left", // Title displayed on the button
+ onPress: () => {
+  console.log("Rotating page counter-clockwise...");
+  instance.applyOperations([
   {
-  type: "redact-rectangle",
-  className: "redactRectangle",
-  },
+   type: "rotatePages", // Operation type for rotating pages
+   pageIndexes: [0], // Example: Rotate the first page
+   rotateBy: -90 // Rotate 90 degrees counter-clockwise
+  }
+  ]);
+ }
+ },
+ {
+ type: "custom", // Use custom type for the rotation button
+ id: "rotate-page-button", // Unique identifier for the custom item
+ title: "Rotate Right", // Title displayed on the button
+ onPress: () => {
+  console.log("Rotating page...");
+  const currentViewState = instance.viewState;
+  instance.applyOperations([
   {
-  type: "custom",
-  id: "apply-redactions",
-  title: "Apply All Redactions",
-  className: "applyRedactions",
-  onPress: () => {
-   console.log("Applying redactions...");
-   instance.applyRedactions();
-   const parent = document.getElementById("text-container");
-   if (parent) {
-   parent.innerHTML = "";
-   }
-  },
-  },
-  {
-  type: "export-pdf",
-  title: "Download",
-  icon: null,
-  },
+   type: "rotatePages", // Operation type for rotating pages
+   pageIndexes: [currentViewState.currentPageIndex], // Example: Rotate the first page
+   rotateBy: 90 // Rotate 90 degrees clockwise
+  }
+  ]);
+ }
+ },
+ {
+ type: "custom",
+ id: "toggle-view-mode-button",
+ title: "Toggle View Mode Off", // Initial title
+ onPress: () => {
+  console.log("Toggling view mode...");
+  // Get the current view state
+  const currentViewState = instance.viewState;
+  // Determine the current scroll mode
+  const currentScrollMode = currentViewState.scrollMode;
+  // Toggle the scroll mode
+  const newScrollMode = currentScrollMode === PSPDFKit.ScrollMode.CONTINUOUS
+  ? PSPDFKit.ScrollMode.PER_SPREAD
+  : PSPDFKit.ScrollMode.CONTINUOUS;
+  // Keep the current page index and zoom level
+  const currentPageIndex = currentViewState.currentPageIndex;
+  const zoomLevel = currentViewState.zoomLevel;
+  // Update the view state with the new scroll mode, lock to the current page, and set the zoom level
+  const newViewState = currentViewState
+  .set("scrollMode", newScrollMode)
+  .set("currentPageIndex", currentPageIndex)
+  .set("zoomLevel", zoomLevel);
+  // Update the viewer with the new view state
+  instance.setViewState(newViewState);
+  // Toggle the button title
+  const newTitle = newScrollMode === PSPDFKit.ScrollMode.CONTINUOUS
+  ? "Toggle View Mode Off"
+  : "Toggle View Mode On";
+  // Update the toolbar item with the new title
+  instance.setToolbarItems((prevItems: any[]) =>
+  prevItems.map(item =>
+   item.id === "toggle-view-mode-button"
+   ? { ...item, title: newTitle }
+   : item
+  )
+  );
+ }
+ },
+ {
+ type: "print", // Use custom type for the print button
+ id: "print-pdf-button", // Unique identifier for the custom item
+ title: "Print PDF", // Title displayed on the button
+ onPress: () => {
+  console.log("Printing PDF...");
+  instance.print(); // Call the print method to open the print dialog
+ }
+ },
+{
+ type: "pager"
+},
+
+{
+    type: "custom",
+    id: "zoom-dropdown-button",
+    title: currentZoomPercentage, // Use the string directly
+    dropdownGroup: "zoom-options",
+    onPress: () => {
+        console.log("Zoom dropdown clicked");
+    }
+},
+{
+    type: "custom",
+    id: "fit-width-button",
+    title: "Fit Width",
+    dropdownGroup: "zoom-options",
+    onPress: () => {
+        instance.setViewState(new PSPDFKit.ViewState({
+            zoom: PSPDFKit.ZoomMode.FIT_TO_WIDTH
+        }));
+        setTimeout(updateZoomPercentage, 100); // Allow time for zoom to update
+    }
+},
+{
+    type: "custom",
+    id: "fit-page-button",
+    title: "Fit Page",
+    dropdownGroup: "zoom-options",
+    onPress: () => {
+        instance.setViewState(new PSPDFKit.ViewState({
+            zoom: PSPDFKit.ZoomMode.FIT_TO_VIEWPORT
+        }));
+        setTimeout(updateZoomPercentage, 100); // Allow time for zoom to update
+    }
+},
+{
+    type: "custom",
+    id: "fit-100-button",
+    title: "Fit 100%",
+    dropdownGroup: "zoom-options",
+    onPress: () => {
+        instance.setViewState(new PSPDFKit.ViewState({
+            zoom: 1
+        }));
+        updateZoomPercentage(); // Update the zoom percentage immediately
+    }
+},
+
  ],
  styleSheets: ["index.css"],
  })
  .then((_instance) => {
-  instance = _instance;
-  _instance.addEventListener("annotations.change", () => {
-  console.log(`${pdfDocument} loaded!`);
-  });
-  _instance.setViewState((viewState) =>
-  viewState.set("keepSelectedTool", true)
-  ); // Set up redaction event listener
-  _instance.addEventListener(
-  "annotations.create",
-  async (createdAnnotations) => {
-   console.log("Annotations created", createdAnnotations);
-   for (const annotation of createdAnnotations) {
-   if (
-    annotation instanceof PSPDFKit.Annotations.RedactionAnnotation
-   ) {
-    addTextElement(annotation);
-   }
-   }
-  }
-  );
+ instance = _instance;
+ _instance.addEventListener("annotations.change", () => {
+ console.log(`${pdfDocument} loaded!`);
+ });
+ _instance.setViewState((viewState) =>
+ viewState.set("keepSelectedTool", true)
+ ); // Set up redaction event listener
+ _instance.addEventListener(
+ "annotations.create",
+ async (createdAnnotations) => {
+ console.log("Annotations created", createdAnnotations);
+ for (const annotation of createdAnnotations) {
+ if (
+ annotation instanceof PSPDFKit.Annotations.RedactionAnnotation
+ ) {
+ addTextElement(annotation);
+ }
+ }
+ }
+ );
  })
  .catch(console.error);
 }
-/*async function addTextElement(annotation: {
- id: any;
- pageIndex: any;
- boundingBox: any;
-}) {
- const text = await instance.getMarkupAnnotationText(annotation);
- const redactionId = annotation.id;
- const pageIndex = annotation.pageIndex + 1;
- const rect = annotation.boundingBox;
- // Display the extracted text on the left panel
- const textContainer = document.getElementById(
- "text-container"
- ) as HTMLElement;
- if (textContainer) {
- const textElement = document.createElement("div");
- textElement.id = redactionId;
- textElement.style.display = "flex";
- textElement.style.flexDirection = "column";
- textElement.style.padding = "10px"; // Add padding for better spacing
- textElement.style.borderBottom = "1px solid #ccc"; // Optional: Add a bottom border for separation
- // Create a container for text and trash button
- const textAndTrashContainer = document.createElement("div");
- textAndTrashContainer.style.display = "flex";
- textAndTrashContainer.style.justifyContent = "space-between"; // Space between text and trash button
- textAndTrashContainer.style.alignItems = "center"; // Align items vertically centered
- textAndTrashContainer.style.width = "100%"; // Use full width
- const textNode = document.createElement("span");
- //textNode.textContent = text;
- textNode.textContent = `Page ${pageIndex}: ${text}`;
- textNode.style.flexGrow = "1"; // Allow text to take available space
- textNode.style.marginRight = "10px"; // Add margin to separate text from the button
- const trashButton = document.createElement("button");
- trashButton.innerHTML = '<i class="fas fa-trash"></i>';
- trashButton.className = "trash-button";
- trashButton.style.cursor = "pointer";
- trashButton.style.border = "none"; // Remove default button border
- trashButton.style.background = "none"; // Remove default button background
- trashButton.style.padding = "0"; // Remove padding
- trashButton.style.marginLeft = "10px"; // Add margin for spacing
- trashButton.addEventListener("click", async (e) => {
- e.stopPropagation();
- await handleTrashClick(textElement.id);
- });
- textAndTrashContainer.appendChild(textNode);
- textAndTrashContainer.appendChild(trashButton);
- textElement.appendChild(textAndTrashContainer);
- // Comment container
- const commentContainer = document.createElement("div");
- commentContainer.style.display = "none"; // Initially hidden
- commentContainer.style.marginTop = "5px";
- commentContainer.style.width = "100%";
- const commentInput = document.createElement("textarea"); // Changed to textarea for multiline input
- commentInput.placeholder = "Enter comment...";
- commentInput.style.width = "100%"; // Full width
- commentInput.style.minHeight = "50px"; // Minimum height
- commentInput.style.height = "auto"; // Allow height to adjust
- commentInput.style.padding = "5px";
- commentInput.style.resize = "none"; // Prevent resizing
- commentInput.style.overflowWrap = "break-word"; // Allow text to break to the next line
- let lastSavedComment = ""; // Store the last saved comment
- // Prevent `textElement` click from stealing focus
- commentInput.addEventListener("click", (e) => {
- e.stopPropagation();
- });
- // Save button
- const saveButton = document.createElement("button");
- saveButton.textContent = "Save";
- saveButton.style.cursor = "pointer";
- saveButton.style.display = "none"; // Initially hidden
- saveButton.style.marginTop = "5px"; // Add margin for spacing
- saveButton.addEventListener("click", () => {
- lastSavedComment = commentInput.value; // Save the current input value
- saveButton.style.display = "none"; // Hide save button after saving
- console.log("Comment saved:", lastSavedComment); // Optional: Log the saved comment
- });
- // Input event for comment input
- commentInput.addEventListener("input", (event) => {
- event.stopPropagation();
- if (commentInput.value !== lastSavedComment) {
- saveButton.style.display = "block"; // Show save button if there are changes
- } else {
- saveButton.style.display = "none"; // Hide save button if no changes
- }
- });
- commentContainer.appendChild(commentInput);
- commentContainer.appendChild(saveButton);
- // Toggle button
- const toggleButton = document.createElement("button");
- toggleButton.innerHTML = '<i class="fas fa-comment"></i>'; // Add comment symbol
- toggleButton.style.marginTop = "5px";
- toggleButton.style.cursor = "pointer";
- toggleButton.style.alignSelf = "flex-start"; // Align the toggle button to the left
- toggleButton.addEventListener("click", (e) => {
- e.stopPropagation(); // Prevent unwanted propagation
- if (commentContainer.style.display === "none") {
- commentContainer.style.display = "block";
- commentInput.value = lastSavedComment; // Restore the last saved comment
- saveButton.style.display = "none"; // Hide save button when opening
- } else {
- commentContainer.style.display = "none";
- }
- });
- // Append elements
- textElement.appendChild(toggleButton); // Move toggle button below the text and trash
- textElement.appendChild(commentContainer); // Append comment container below the toggle button
- // Add click event listener to the text element
- textElement.style.cursor = "pointer";
- textElement.addEventListener("click", (e: MouseEvent) => {
- selectAnnotationById(redactionId, pageIndex-1, rect);
- e.stopPropagation();
- // Remove highlight from the previously highlighted element
- if (highlightedElement) {
- highlightedElement.classList.remove("highlight");
- }
- // Highlight the clicked text element
- highlightedElement = textElement;
- highlightedElement.classList.add("highlight");
- });
- textContainer.appendChild(textElement);
- textContainer.scrollTop = textContainer.scrollHeight;
- }
-}*/
+
+
+// // Update function to modify the toolbar item directly
+// const updateZoomPercentage = () => {
+//     const zoom = instance.currentZoomLevel;
+//     currentZoomPercentage = `${Math.round(zoom * 100)}%`;
+    
+//     // Update the toolbar item directly
+//     instance.setToolbarItems((items: any[]) => 
+//       items.map(item => 
+//         item.id === "zoom-dropdown-button" 
+//           ? { ...item, title: currentZoomPercentage } 
+//           : item
+//       )
+//     );
+//   };
+
+
+//   const updateZoomPercentage = () => {
+//     const zoom = instance.currentZoomLevel;
+//     currentZoomPercentage = `${Math.round(zoom * 100)}%`;
+    
+//     // Force update of the toolbar
+//     instance.setToolbarItems((items: any) => [...items]);
+//   };
+
+
 async function addTextElement(annotation: {
  id: any;
  pageIndex: any;
@@ -568,29 +516,6 @@ async function addTextElement(annotation: {
  commentInput.style.padding = "5px";
  commentInput.style.resize = "none"; // Prevent resizing
  commentInput.style.overflowWrap = "break-word"; // Allow text to break to the next line
- //let lastSavedComment = ""; // Store the last saved comment
- // Prevent `textElement` click from stealing focus
- /*commentInput.addEventListener("click", (e) => {
- e.stopPropagation();
- });*/ // Save button
- /*const saveButton = document.createElement("button");
- saveButton.textContent = "Save";
- saveButton.style.cursor = "pointer";
- saveButton.style.display = "none"; // Initially hidden
- saveButton.style.marginTop = "5px"; // Add margin for spacing
- saveButton.addEventListener("click", () => {
- lastSavedComment = commentInput.value; // Save the current input value
- saveButton.style.display = "none"; // Hide save button after saving
- console.log("Comment saved:", lastSavedComment); // Optional: Log the saved comment
- });*/ // Input event for comment input
- /*commentInput.addEventListener("input", (event) => {
- event.stopPropagation();
- if (commentInput.value !== lastSavedComment) {
- saveButton.style.display = "block"; // Show save button if there are changes
- } else {
- saveButton.style.display = "none"; // Hide save button if no changes
- }
- });*/
  commentContainer.appendChild(commentInput); //commentContainer.appendChild(saveButton);
  // Toggle button
  const toggleButton = document.createElement("button");
@@ -601,10 +526,10 @@ async function addTextElement(annotation: {
  toggleButton.addEventListener("click", (e) => {
  e.stopPropagation(); // Prevent unwanted propagation
  if (commentContainer.style.display === "block") {
-  commentContainer.style.display = "none"; //commentInput.value = lastSavedComment; // Restore the last saved comment
-  // saveButton.style.display = "none"; // Hide save button when opening
+ commentContainer.style.display = "none"; //commentInput.value = lastSavedComment; // Restore the last saved comment
+ // saveButton.style.display = "none"; // Hide save button when opening
  } else {
-  commentContainer.style.display = "block";
+ commentContainer.style.display = "block";
  }
  }); // Append elements
  textElement.appendChild(toggleButton); // Move toggle button below the text and trash
@@ -614,13 +539,13 @@ async function addTextElement(annotation: {
  commentInput.placeholder = annotation.customData.category;
 } else {
  (async function getUserComment() {
-   const userComment = prompt("Please enter a comment");
-   if (userComment === null || userComment.trim() === "") {
-     console.log("User canceled or entered an empty comment. Deleting annotation...");
-     await handleTrashClick(textElement.id); // Ensure async behavior
-   } else {
-     commentInput.placeholder = userComment;
-   }
+ const userComment = prompt("Please enter a comment");
+ if (userComment === null || userComment.trim() === "") {
+  console.log("User canceled or entered an empty comment. Deleting annotation...");
+  await handleTrashClick(textElement.id); // Ensure async behavior
+ } else {
+  commentInput.placeholder = userComment;
+ }
  })(); // Immediately Invoked Function Expression (IIFE) to handle async/await
 }
  // Add click event listener to the text element
@@ -630,7 +555,7 @@ async function addTextElement(annotation: {
  textElement.scrollIntoView({ behavior: "smooth", block: "center" });
  e.stopPropagation(); // Remove highlight from the previously highlighted element
  if (highlightedElement) {
-  highlightedElement.classList.remove("highlight");
+ highlightedElement.classList.remove("highlight");
  } // Highlight the clicked text element
  highlightedElement = textElement;
  highlightedElement.classList.add("highlight");
@@ -643,8 +568,8 @@ async function addTextElement(annotation: {
  }
  if(instance){
  instance.addEventListener("viewState.currentPageIndex.change", (newPageIndex: any) => {
-  console.log("Page changed to:", newPageIndex);
-  scrollToPageIndex(newPageIndex + 1);
+ console.log("Page changed to:", newPageIndex);
+ scrollToPageIndex(newPageIndex + 1);
  });}
 } /**
  * Inserts a new element into the container in the correct order based on pageIndex.
@@ -660,12 +585,12 @@ function insertInOrder(
  const existingText = elements[i].querySelector("span")?.textContent ?? "";
  const match = existingText.match(/Page (\d+):/);
  const existingPageIndex = match
-  ? parseInt(match[1], 10)
-  : Number.MAX_SAFE_INTEGER;
+ ? parseInt(match[1], 10)
+ : Number.MAX_SAFE_INTEGER;
  if (newPageIndex < existingPageIndex) {
-  container.insertBefore(newElement, elements[i]);
-  inserted = true;
-  break;
+ container.insertBefore(newElement, elements[i]);
+ inserted = true;
+ break;
  }
  } // If no suitable place was found, append at the end
  if (!inserted) {
@@ -679,8 +604,8 @@ function scrollToPageIndex(pageIndex: number) {
  for (let i = 0; i < textElements.length; i++) {
  const textElement = textElements[i];
  if (textElement.textContent?.includes(`Page ${pageIndex}:`)) {
-  textElement.scrollIntoView({ behavior: "smooth", block: "start" });
-  break;
+ textElement.scrollIntoView({ behavior: "smooth", block: "start" });
+ break;
  }
  }
 }
@@ -692,13 +617,13 @@ textContainer.addEventListener("scroll", () => {
  const currentPageText = currentTextElement.querySelector("span")?.textContent ?? "";
  const currentPageIndexMatch = currentPageText.match(/Page (\d+):/);
  if (currentPageIndexMatch) {
-  const currentPageIndex = parseInt(currentPageIndexMatch[1], 10);
-  // Only print if the current page differs from the last visible page
-  if (currentPageIndex !== lastVisiblePageIndex) {
-  console.log(`Page changed to: ${currentPageIndex} from: ${lastVisiblePageIndex}`);
-  instance.setViewState((state: { set: (arg0: string, arg1: number) => any; }) => state.set("currentPageIndex", currentPageIndex-1));
-  lastVisiblePageIndex = currentPageIndex;
-  }
+ const currentPageIndex = parseInt(currentPageIndexMatch[1], 10);
+ // Only print if the current page differs from the last visible page
+ if (currentPageIndex !== lastVisiblePageIndex) {
+ console.log(`Page changed to: ${currentPageIndex} from: ${lastVisiblePageIndex}`);
+ instance.setViewState((state: { set: (arg0: string, arg1: number) => any; }) => state.set("currentPageIndex", currentPageIndex-1));
+ lastVisiblePageIndex = currentPageIndex;
+ }
  }
  }
 });
@@ -712,7 +637,7 @@ textContainer.addEventListener("scroll", () => {
  const containerRect = container.getBoundingClientRect();
  // Check if the bottom of the element is within the visible area of the container
  if (rect.top >= containerRect.top && rect.top < containerRect.bottom && rect.bottom <= containerRect.bottom) {
-  lastVisibleElement = textElement;
+ lastVisibleElement = textElement;
  }
  }
  return lastVisibleElement;
@@ -728,8 +653,8 @@ const textElements = container.getElementsByTagName("div");
  const containerRect = container.getBoundingClientRect();
  // Check if the top of the element is within the visible area of the container
  if (rect.bottom >= containerRect.top && rect.bottom < containerRect.bottom && rect.top >= containerRect.top) {
-  firstVisibleElement = textElement;
-  break;
+ firstVisibleElement = textElement;
+ break;
  }
  }
  return firstVisibleElement;
@@ -738,7 +663,7 @@ async function handleTrashClick(annotationId: string) {
  if (instance) {
  const textDiv = document.getElementById(annotationId);
  if (textDiv) {
-  textDiv.remove();
+ textDiv.remove();
  }
  await instance.delete(annotationId);
  }
@@ -771,18 +696,18 @@ function createRedactionFromCoordinates(
  const redaction = new PSPDFKit.Annotations.RedactionAnnotation({
  pageIndex: pageIndex,
  boundingBox: new PSPDFKit.Geometry.Rect({
-  left: left,
-  top: top,
-  width: width,
-  height: height,
+ left: left,
+ top: top,
+ width: width,
+ height: height,
  }),
  rects: PSPDFKit.Immutable.List([
-  new PSPDFKit.Geometry.Rect({
-  left: left,
-  top: top,
-  width: width,
-  height: height,
-  }),
+ new PSPDFKit.Geometry.Rect({
+ left: left,
+ top: top,
+ width: width,
+ height: height,
+ }),
  ]), // color: PSPDFKit.Color.RED,
  fillColor: PSPDFKit.Color.BLACK, // overlayText: "REDACTED"
  });
@@ -790,31 +715,27 @@ function createRedactionFromCoordinates(
  instance.create(updatedAnnotaion);
 }
 
-function rotatePageClockwise() {
-  const currentPageIndex = instance.viewState.currentPageIndex;
-  instance.applyOperations([
-    {
-      type: "rotatePages",
-      pageIndexes: [currentPageIndex],
-      rotateBy: 90 // Rotate 90 degrees clockwise
+
+function updateZoomPercentage() {
+    const zoomLevel = instance.viewState.zoomLevel; // Get the current zoom level
+    const zoomMode = instance.viewState.zoomMode; // Get the current zoom mode
+
+    if (zoomMode === PSPDFKit.ZoomMode.FIT_TO_WIDTH) {
+        currentZoomPercentage = "Fit Width";
+    } else if (zoomMode === PSPDFKit.ZoomMode.FIT_TO_VIEWPORT) {
+        currentZoomPercentage = "Fit Page";
+    } else {
+        currentZoomPercentage = Math.round(zoomLevel * 100) + "%"; // Convert zoom level to percentage
     }
-  ]);
+
+    // Update the title of the zoom dropdown button
+    instance.setToolbarItems((prevItems: any[]) =>
+        prevItems.map((item) =>
+            item.id === "zoom-dropdown-button"
+                ? { ...item, title: currentZoomPercentage }
+                : item
+        )
+    );
 }
 
-// Function to rotate the current page counterclockwise
-function rotatePageCounterclockwise() {
-  const currentPageIndex = instance.viewState.currentPageIndex;
-  instance.applyOperations([
-    {
-      type: "rotatePages",
-      pageIndexes: [currentPageIndex],
-      rotateBy: -90 // Rotate 90 degrees counterclockwise
-    }
-  ]);
-}
-
-// Example usage of createRedactionFromCoordinates
-// You can call this function with the desired parameters when needed
-// createRedactionFromCoordinates(pageIndex, left, top, width, height);
-// Load the initial document
 load("example.pdf");
