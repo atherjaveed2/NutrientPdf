@@ -1,5 +1,4 @@
 import PSPDFKit, { ViewState } from "@nutrient-sdk/viewer";
-import { title } from "process";
 let instance: any = null;
 let highlightedElement: HTMLElement | null = null;
 let objectUrl = "";
