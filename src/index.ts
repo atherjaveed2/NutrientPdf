@@ -213,6 +213,7 @@ if (fileInput) {
 // Initialize the ViewState
 let viewState = new PSPDFKit.ViewState({
  scrollMode: PSPDFKit.ScrollMode.CONTINUOUS, // or PSPDFKit.ScrollMode.CONTINUOUS
+ sidebarMode: PSPDFKit.SidebarMode.THUMBNAILS
 });
 function load(pdfDocument: string) {
  console.log(`Loading ${pdfDocument}...`); // Apply flexbox to create the layout
@@ -230,12 +231,16 @@ function load(pdfDocument: string) {
 },
  baseUrl: "",
  toolbarItems: [
-    {
-        type:"sidebar-thumbnails"
-    },
-    {
-        type: "document-editor"
-    },
+{
+    type:"sidebar-thumbnails"
+},
+
+{
+    type: "document-editor"
+},
+{
+    type:"sidebar-bookmarks"
+},
  {
  type: "redact-rectangle",
  className: "redactRectangle",
@@ -259,93 +264,94 @@ function load(pdfDocument: string) {
  title: "Download",
  icon: null,
  },
- {
- type: "zoom-in", // Use custom type if "zoom-in" is not predefined
- id: "zoom-in-button", // Unique identifier for the custom item
- title: "Zoom In", // Title displayed on the button
- onPress: () => {
-  console.log("Zooming in...");
-  instance.setViewState((viewState: { zoomIn: () => any; }) => viewState.zoomIn());
- }
- },
- {
- type: "zoom-out", // Use custom type if "zoom-in" is not predefined
- id: "zoom-out-button", // Unique identifier for the custom item
- title: "Zoom Out", // Title displayed on the button
- onPress: () => {
-  console.log("Zooming out...");
-  instance.setViewState((viewState: { zoomOut: () => any; }) => viewState.zoomOut());
- }
- },
- {
- type: "custom", // Use custom type for the rotation button
- id: "rotate-page-counterclockwise-button", // Unique identifier for the custom item
- title: "Rotate Left", // Title displayed on the button
- onPress: () => {
-  console.log("Rotating page counter-clockwise...");
-  instance.applyOperations([
-  {
-   type: "rotatePages", // Operation type for rotating pages
-   pageIndexes: [0], // Example: Rotate the first page
-   rotateBy: -90 // Rotate 90 degrees counter-clockwise
-  }
-  ]);
- }
- },
- {
- type: "custom", // Use custom type for the rotation button
- id: "rotate-page-button", // Unique identifier for the custom item
- title: "Rotate Right", // Title displayed on the button
- onPress: () => {
-  console.log("Rotating page...");
-  const currentViewState = instance.viewState;
-  instance.applyOperations([
-  {
-   type: "rotatePages", // Operation type for rotating pages
-   pageIndexes: [currentViewState.currentPageIndex], // Example: Rotate the first page
-   rotateBy: 90 // Rotate 90 degrees clockwise
-  }
-  ]);
- }
- },
- {
- type: "custom",
- id: "toggle-view-mode-button",
- title: "Toggle View Mode Off", // Initial title
- onPress: () => {
-  console.log("Toggling view mode...");
-  // Get the current view state
-  const currentViewState = instance.viewState;
-  // Determine the current scroll mode
-  const currentScrollMode = currentViewState.scrollMode;
-  // Toggle the scroll mode
-  const newScrollMode = currentScrollMode === PSPDFKit.ScrollMode.CONTINUOUS
-  ? PSPDFKit.ScrollMode.PER_SPREAD
-  : PSPDFKit.ScrollMode.CONTINUOUS;
-  // Keep the current page index and zoom level
-  const currentPageIndex = currentViewState.currentPageIndex;
-  const zoomLevel = currentViewState.zoomLevel;
-  // Update the view state with the new scroll mode, lock to the current page, and set the zoom level
-  const newViewState = currentViewState
-  .set("scrollMode", newScrollMode)
-  .set("currentPageIndex", currentPageIndex)
-  .set("zoomLevel", zoomLevel);
-  // Update the viewer with the new view state
-  instance.setViewState(newViewState);
-  // Toggle the button title
-  const newTitle = newScrollMode === PSPDFKit.ScrollMode.CONTINUOUS
-  ? "Toggle View Mode Off"
-  : "Toggle View Mode On";
-  // Update the toolbar item with the new title
-  instance.setToolbarItems((prevItems: any[]) =>
-  prevItems.map(item =>
-   item.id === "toggle-view-mode-button"
-   ? { ...item, title: newTitle }
-   : item
-  )
-  );
- }
- },
+ 
+//  {
+//  type: "zoom-in", // Use custom type if "zoom-in" is not predefined
+//  id: "zoom-in-button", // Unique identifier for the custom item
+//  title: "Zoom In", // Title displayed on the button
+//  onPress: () => {
+//   console.log("Zooming in...");
+//   instance.setViewState((viewState: { zoomIn: () => any; }) => viewState.zoomIn());
+//  }
+//  },
+//  {
+//  type: "zoom-out", // Use custom type if "zoom-in" is not predefined
+//  id: "zoom-out-button", // Unique identifier for the custom item
+//  title: "Zoom Out", // Title displayed on the button
+//  onPress: () => {
+//   console.log("Zooming out...");
+//   instance.setViewState((viewState: { zoomOut: () => any; }) => viewState.zoomOut());
+//  }
+//  },
+//  {
+//  type: "custom", // Use custom type for the rotation button
+//  id: "rotate-page-counterclockwise-button", // Unique identifier for the custom item
+//  title: "Rotate Left", // Title displayed on the button
+//  onPress: () => {
+//   console.log("Rotating page counter-clockwise...");
+//   instance.applyOperations([
+//   {
+//    type: "rotatePages", // Operation type for rotating pages
+//    pageIndexes: [0], // Example: Rotate the first page
+//    rotateBy: -90 // Rotate 90 degrees counter-clockwise
+//   }
+//   ]);
+//  }
+//  },
+//  {
+//  type: "custom", // Use custom type for the rotation button
+//  id: "rotate-page-button", // Unique identifier for the custom item
+//  title: "Rotate Right", // Title displayed on the button
+//  onPress: () => {
+//   console.log("Rotating page...");
+//   const currentViewState = instance.viewState;
+//   instance.applyOperations([
+//   {
+//    type: "rotatePages", // Operation type for rotating pages
+//    pageIndexes: [currentViewState.currentPageIndex], // Example: Rotate the first page
+//    rotateBy: 90 // Rotate 90 degrees clockwise
+//   }
+//   ]);
+//  }
+//  },
+//  {
+//  type: "custom",
+//  id: "toggle-view-mode-button",
+//  title: "Toggle View Mode Off", // Initial title
+//  onPress: () => {
+//   console.log("Toggling view mode...");
+//   // Get the current view state
+//   const currentViewState = instance.viewState;
+//   // Determine the current scroll mode
+//   const currentScrollMode = currentViewState.scrollMode;
+//   // Toggle the scroll mode
+//   const newScrollMode = currentScrollMode === PSPDFKit.ScrollMode.CONTINUOUS
+//   ? PSPDFKit.ScrollMode.PER_SPREAD
+//   : PSPDFKit.ScrollMode.CONTINUOUS;
+//   // Keep the current page index and zoom level
+//   const currentPageIndex = currentViewState.currentPageIndex;
+//   const zoomLevel = currentViewState.zoomLevel;
+//   // Update the view state with the new scroll mode, lock to the current page, and set the zoom level
+//   const newViewState = currentViewState
+//   .set("scrollMode", newScrollMode)
+//   .set("currentPageIndex", currentPageIndex)
+//   .set("zoomLevel", zoomLevel);
+//   // Update the viewer with the new view state
+//   instance.setViewState(newViewState);
+//   // Toggle the button title
+//   const newTitle = newScrollMode === PSPDFKit.ScrollMode.CONTINUOUS
+//   ? "Toggle View Mode Off"
+//   : "Toggle View Mode On";
+//   // Update the toolbar item with the new title
+//   instance.setToolbarItems((prevItems: any[]) =>
+//   prevItems.map(item =>
+//    item.id === "toggle-view-mode-button"
+//    ? { ...item, title: newTitle }
+//    : item
+//   )
+//   );
+//  }
+//  },
  {
  type: "print", // Use custom type for the print button
  id: "print-pdf-button", // Unique identifier for the custom item
@@ -406,6 +412,104 @@ function load(pdfDocument: string) {
 },
 
  ],
+
+documentEditorToolbarItems: PSPDFKit.defaultDocumentEditorToolbarItems.map(item => 
+    item.type === 'remove' ? {
+      type: 'custom',
+      id: 'custom-delete',
+      title: 'Mark as Deleted',
+      onPress: (event: MouseEvent | KeyboardEvent, documentEditorUIHandler: any, id: string) => {
+        const selectedPageIndexes = documentEditorUIHandler.getSelectedPageIndexes();
+        
+        const pageElements = instance.contentDocument.querySelectorAll('.PSPDFKit-DocumentEditor-Thumbnails-Page-Image.PSPDFKit-DocumentEditor-Page');
+        
+        selectedPageIndexes.forEach((pageIndex: number) => {
+          if (pageIndex < pageElements.length) {
+            const pageElement = pageElements[pageIndex];
+            pageElement.classList.add('page-strike-through');
+            console.log(`Strike-through effect applied to page ${pageIndex}`);
+          } else {
+            console.log(`Page index ${pageIndex} is out of range`);
+          }
+        });
+      
+        // Provide feedback to the user
+      }
+
+    
+    } : item
+  ),
+
+
+  documentEditorFooterItems: PSPDFKit.defaultDocumentEditorFooterItems.map(item => 
+    item.type === 'save' ? {
+      type: 'custom',
+      id: 'custom-save',
+      title: 'Save and Delete Marked Pages',
+      node: document.createElement('button'),
+      onPress: async (event: MouseEvent | KeyboardEvent, documentEditorUIHandler: any, id: string) => {
+        if (!instance || !instance.contentDocument) {
+          alert('Unable to save document. Please try again.');
+          return;
+        }
+  
+        try {
+          // Show a loading indicator
+        //   documentEditorUIHandler.showLoadingIndicator();
+
+          const strikedPages = Array.from(instance.contentDocument.querySelectorAll('.page-strike-through')) as Element[];
+            const pagesToRemove = strikedPages.map(page => 
+            Array.from(page.parentNode?.children || []).indexOf(page)
+            ).filter(index => index >= 0 && index < instance.totalPageCount);
+            
+          if (pagesToRemove.length === 0) {
+            alert('No pages marked for deletion.');
+            return;
+          }
+
+
+
+          // Sort page indices in descending order
+let pagesToRemoveArray = [...pagesToRemove].sort((a, b) => b - a);
+
+// Remove pages one by one, starting from the highest index
+for (const pageIndex of pagesToRemoveArray) {
+  await instance.applyOperations([
+    {
+      type: 'removePages',
+      pageIndexes: [pageIndex]
+    }
+  ]);
+}
+
+        //   await instance.applyOperations([
+        //     {
+        //       type: 'removePages',
+        //       pageIndexes: pagesToRemove
+        //     }
+        //   ]);
+  
+          const pdfData = await instance.exportPDF();
+          
+          // Here you can save the pdfData to a file or send it to a server
+          console.log("PDF exported with deleted pages");
+          alert('Document saved successfully with marked pages removed.');
+        } catch (error) {
+            console.error('Error saving document:', error);
+            if (error instanceof Error) {
+              console.error('Error name:', error.name);
+              console.error('Error message:', error.message);
+              console.error('Error stack:', error.stack);
+            }
+            alert('An error occurred while saving the document. Please check the console for more details.');
+          }finally {
+          // Hide the loading indicator
+        //   documentEditorUIHandler.hideLoadingIndicator();
+        }
+      }
+    } : item
+  ) as any,
+
  styleSheets: ["index.css"],
  })
  .then((_instance) => {
@@ -429,34 +533,307 @@ function load(pdfDocument: string) {
  }
  }
  );
+
+  _instance.setCustomUIConfiguration((customUIConfiguration: any) => ({
+    ...customUIConfiguration,
+    [PSPDFKit.UIElement.Sidebar]: {
+      [PSPDFKit.SidebarMode.CUSTOM](payload: { containerNode: HTMLElement }) {
+        const { containerNode } = payload;
+        
+        // Set the width of the sidebar container
+        containerNode.style.width = "300px";
+        containerNode.style.maxWidth = "300%";
+        containerNode.style.overflow = "auto";
+        
+        // Create a notes container
+        const notesContainer = document.createElement('div');
+        notesContainer.className = 'custom-notes-container';
+        notesContainer.style.padding = "10px";
+        
+        // Add a title
+        // const title = document.createElement('h3');
+        // title.textContent = 'Document Notes';
+        // notesContainer.appendChild(title);
+
+
+        const titleCard = document.createElement('div');
+        titleCard.className = 'custom-title-card';
+        titleCard.style.backgroundColor = '#f5f5f5';
+        titleCard.style.padding = '12px';
+        titleCard.style.borderRadius = '4px';
+        titleCard.style.marginBottom = '15px';
+        titleCard.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+        titleCard.style.fontWeight = 'bold';
+        titleCard.style.fontSize = '16px';
+        titleCard.textContent = 'Document Notes';
+        notesContainer.appendChild(titleCard);
+
+        // Add "Add Document Note" button at the top
+        const addButton = document.createElement('button');
+        addButton.textContent = 'Add Document Note';
+        addButton.className = 'PSPDFKit-Sidebar-Bookmarks-Button-Add'; // Using bookmark button styling
+        addButton.style.width = '100%';
+        addButton.style.padding = '8px';
+        addButton.style.marginBottom = '10px';
+        
+        // Store notes in an array (you might want to persist this)
+        const notes: { pageIndex: number; text: string; }[] = [];
+        const renderNotes = () => {
+        // Clear existing notes from the DOM
+        const existingNotes = notesContainer.querySelectorAll('.custom-note');
+        existingNotes.forEach(note => note.remove());
+        
+        // Get today's date in a readable format
+        const today = new Date();
+        const formattedDate = today.toLocaleDateString();
+        
+        // Render each note
+        notes.forEach((note, index) => {
+        const noteElement = document.createElement('div');
+        noteElement.className = 'custom-note';
+        
+        // Apply card-like styling
+        noteElement.style.backgroundColor = '#f5f5f5';
+        noteElement.style.padding = '12px';
+        noteElement.style.borderRadius = '4px';
+        noteElement.style.marginBottom = '10px';
+        noteElement.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+        noteElement.style.cursor = 'pointer';
+        noteElement.style.position = 'relative';
+        noteElement.style.paddingBottom = '40px'; // Add padding at bottom for buttons
+        
+        // Create header section with page number and date
+        const headerSection = document.createElement('div');
+        headerSection.style.display = 'flex';
+        headerSection.style.justifyContent = 'space-between';
+        headerSection.style.marginBottom = '5px';
+        
+        const pageLabel = document.createElement('div');
+        pageLabel.className = 'PSPDFKit-Sidebar-Bookmarks-Page-Number';
+        pageLabel.textContent = `Page ${note.pageIndex + 1}`;
+        pageLabel.style.fontWeight = 'bold';
+        
+        const dateLabel = document.createElement('div');
+        dateLabel.className = 'note-date';
+        dateLabel.textContent = formattedDate;
+        dateLabel.style.fontSize = '12px';
+        dateLabel.style.color = '#666';
+        
+        headerSection.appendChild(pageLabel);
+        headerSection.appendChild(dateLabel);
+        
+        // Create note text element (initially not editable)
+        const noteText = document.createElement('div');
+        noteText.className = 'PSPDFKit-Sidebar-Bookmarks-Name';
+        noteText.textContent = note.text;
+        noteText.style.marginBottom = '10px';
+        
+        // Create a button container for the bottom right
+        const buttonContainer = document.createElement('div');
+        buttonContainer.style.position = 'absolute';
+        buttonContainer.style.bottom = '10px';
+        buttonContainer.style.right = '10px';
+        buttonContainer.style.display = 'flex';
+        buttonContainer.style.gap = '5px';
+        
+        // Add edit button
+        const editButton = document.createElement('button');
+        editButton.textContent = 'Edit';
+        editButton.className = 'PSPDFKit-Sidebar-Bookmarks-Button-Save'; // Using bookmark save button styling
+        editButton.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent navigation when clicking edit
+            
+            // Switch to edit mode
+            const textArea = document.createElement('textarea');
+            textArea.className = 'PSPDFKit-Sidebar-Bookmarks-Editor';
+            textArea.value = note.text;
+            textArea.style.width = '100%';
+            textArea.style.minHeight = '60px';
+            textArea.style.border = '1px solid #ccc';
+            textArea.style.borderRadius = '3px';
+            textArea.style.padding = '5px';
+            textArea.style.marginBottom = '10px';
+            textArea.style.resize = 'vertical';
+            
+            // Replace the text div with textarea
+            noteElement.replaceChild(textArea, noteText);
+            textArea.focus();
+            
+            // Change edit button to save button
+            editButton.textContent = 'Save';
+            editButton.removeEventListener('click', editButton.onclick);
+            editButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const newText = textArea.value.trim();
+            if (newText) {
+                notes[index].text = newText;
+                renderNotes();
+            }
+            });
+            
+            // Add cancel button
+            const cancelButton = document.createElement('button');
+            cancelButton.textContent = 'Cancel';
+            cancelButton.className = 'PSPDFKit-Sidebar-Bookmarks-Button-Delete';
+            cancelButton.style.marginRight = '5px';
+            cancelButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            renderNotes(); // Just re-render to cancel editing
+            });
+            
+            // Add cancel button before edit button
+            buttonContainer.insertBefore(cancelButton, editButton);
+        });
+        
+        // Add delete button
+        const deleteButton = document.createElement('button');
+        deleteButton.textContent = 'Delete';
+        deleteButton.className = 'PSPDFKit-Sidebar-Bookmarks-Button-Delete';
+        deleteButton.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent navigation when clicking delete
+            notes.splice(index, 1);
+            renderNotes();
+        });
+        
+        // Add click handler to navigate to the page
+        noteElement.addEventListener('click', () => {
+            _instance.setViewState((viewState: any) => 
+            viewState.set('currentPageIndex', note.pageIndex)
+            );
+        });
+        
+        // Append buttons to the button container
+        buttonContainer.appendChild(editButton);
+        buttonContainer.appendChild(deleteButton);
+        
+        // Append elements to the note card
+        noteElement.appendChild(headerSection);
+        noteElement.appendChild(noteText);
+        noteElement.appendChild(buttonContainer);
+        notesContainer.appendChild(noteElement);
+        });
+    };
+            
+        // Modify the add button click handler to create an editable card instead of showing a prompt
+        addButton.addEventListener('click', () => {
+            // Get current page index
+            const currentPageIndex = _instance.viewState.currentPageIndex;
+            
+            // Create a temporary editable note card
+            const editableNoteCard = document.createElement('div');
+            editableNoteCard.className = 'custom-note';
+            editableNoteCard.style.backgroundColor = '#f5f5f5';
+            editableNoteCard.style.padding = '12px';
+            editableNoteCard.style.borderRadius = '4px';
+            editableNoteCard.style.marginBottom = '10px';
+            editableNoteCard.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+            
+            // Get today's date
+            const today = new Date();
+            const formattedDate = today.toLocaleDateString();
+            
+            // Create header section with page number and date
+            const headerSection = document.createElement('div');
+            headerSection.style.display = 'flex';
+            headerSection.style.justifyContent = 'space-between';
+            headerSection.style.marginBottom = '5px';
+            
+            const pageLabel = document.createElement('div');
+            pageLabel.className = 'PSPDFKit-Sidebar-Bookmarks-Page-Number';
+            pageLabel.textContent = `Page ${currentPageIndex + 1}`;
+            pageLabel.style.fontWeight = 'bold';
+            
+            const dateLabel = document.createElement('div');
+            dateLabel.className = 'note-date';
+            dateLabel.textContent = formattedDate;
+            dateLabel.style.fontSize = '12px';
+            dateLabel.style.color = '#666';
+            
+            headerSection.appendChild(pageLabel);
+            headerSection.appendChild(dateLabel);
+            
+            // Create editable text area
+            const textArea = document.createElement('textarea');
+            textArea.className = 'PSPDFKit-Sidebar-Bookmarks-Name';
+            textArea.style.width = '100%';
+            textArea.style.minHeight = '60px';
+            textArea.style.border = '1px solid #ccc';
+            textArea.style.borderRadius = '3px';
+            textArea.style.padding = '5px';
+            textArea.style.marginBottom = '10px';
+            textArea.style.resize = 'vertical';
+            textArea.placeholder = 'Enter your note here...';
+            textArea.focus(); // Auto-focus the textarea
+            
+            // Create button container
+            const buttonContainer = document.createElement('div');
+            buttonContainer.style.display = 'flex';
+            buttonContainer.style.justifyContent = 'flex-end';
+            buttonContainer.style.gap = '5px';
+            
+            // Save button
+            const saveButton = document.createElement('button');
+            saveButton.textContent = 'Save';
+            saveButton.className = 'PSPDFKit-Sidebar-Bookmarks-Button-Save';
+            saveButton.addEventListener('click', () => {
+            const noteText = textArea.value.trim();
+            if (noteText) {
+                // Add the new note
+                notes.push({
+                pageIndex: currentPageIndex,
+                text: noteText
+                });
+                
+                // Remove the editable card and re-render all notes
+                notesContainer.removeChild(editableNoteCard);
+                renderNotes();
+            }
+            });
+            
+            // Cancel button
+            const cancelButton = document.createElement('button');
+            cancelButton.textContent = 'Cancel';
+            cancelButton.className = 'PSPDFKit-Sidebar-Bookmarks-Button-Delete';
+            cancelButton.addEventListener('click', () => {
+            // Just remove the editable card
+            notesContainer.removeChild(editableNoteCard);
+            });
+            
+            // Append buttons to container
+            buttonContainer.appendChild(cancelButton);
+            buttonContainer.appendChild(saveButton);
+            
+            // Assemble the editable note card
+            editableNoteCard.appendChild(headerSection);
+            editableNoteCard.appendChild(textArea);
+            editableNoteCard.appendChild(buttonContainer);
+            
+            // Insert the editable card at the top of the notes list (after the add button)
+            notesContainer.insertBefore(editableNoteCard, addButton.nextSibling);
+        });
+        
+        notesContainer.appendChild(addButton);
+        containerNode.appendChild(notesContainer);
+        
+        // Initial render of notes
+        renderNotes();
+        
+        return {
+          node: containerNode
+        };
+      }
+    }
+  }));
+  
+  // Show the custom sidebar
+  _instance.setViewState((viewState: any) => 
+    viewState.set("sidebarMode", PSPDFKit.SidebarMode.CUSTOM)
+  );
+
  })
  .catch(console.error);
 }
 
-
-// // Update function to modify the toolbar item directly
-// const updateZoomPercentage = () => {
-//     const zoom = instance.currentZoomLevel;
-//     currentZoomPercentage = `${Math.round(zoom * 100)}%`;
-    
-//     // Update the toolbar item directly
-//     instance.setToolbarItems((items: any[]) => 
-//       items.map(item => 
-//         item.id === "zoom-dropdown-button" 
-//           ? { ...item, title: currentZoomPercentage } 
-//           : item
-//       )
-//     );
-//   };
-
-
-//   const updateZoomPercentage = () => {
-//     const zoom = instance.currentZoomLevel;
-//     currentZoomPercentage = `${Math.round(zoom * 100)}%`;
-    
-//     // Force update of the toolbar
-//     instance.setToolbarItems((items: any) => [...items]);
-//   };
 
 
 async function addTextElement(annotation: {
@@ -626,22 +1003,6 @@ textContainer.addEventListener("scroll", () => {
  }
  }
 });
-/*function getLastVisibleTextElement(container: HTMLElement) {
- const textElements = container.getElementsByTagName("div");
- let lastVisibleElement: HTMLElement = null;
- // Iterate over all text elements and find the one at the bottom of the container
- for (let i = 0; i < textElements.length; i++) {
- const textElement = textElements[i];
- const rect = textElement.getBoundingClientRect();
- const containerRect = container.getBoundingClientRect();
- // Check if the bottom of the element is within the visible area of the container
- if (rect.top >= containerRect.top && rect.top < containerRect.bottom && rect.bottom <= containerRect.bottom) {
- lastVisibleElement = textElement;
- }
- }
- return lastVisibleElement;
-}
-*/
 function getLastVisibleTextElement(container: HTMLElement) {
 const textElements = container.getElementsByTagName("div");
  let firstVisibleElement: HTMLElement = null;

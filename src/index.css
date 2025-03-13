@@ -124,7 +124,9 @@ body {
 
 .PSPDFKit-Toolbar .redactRectangle {
   margin-left: 0; /* Directly adjacent to Random */
+
 }
+
 
 /* Resizer styles */
 .resizer {
@@ -142,4 +144,55 @@ body {
   height: 20px; /* Height of the grab handle */
   background-color: #888; /* Darker gray for contrast */
   border-radius: 5px; /* Rounded corners for the grab handle */
+}
+
+
+.custom-delete-button {
+  /* Your custom styles here */
+  background-color: red;
+  color: white;
+}
+
+
+
+.page-strike-through {
+  position: relative;
+}
+
+.page-strike-through::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(to bottom right, 
+                              transparent calc(50% - 1px), 
+                              red, 
+                              transparent calc(50% + 1px));
+  pointer-events: none;
+  z-index: 1000;
+}
+
+
+
+
+
+.PSPDFKit-DocumentEditor-Thumbnails-Page-Image.PSPDFKit-DocumentEditor-Page.page-strike-through {
+  position: relative;
+}
+
+.PSPDFKit-DocumentEditor-Thumbnails-Page-Image.PSPDFKit-DocumentEditor-Page.page-strike-through::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(to bottom right, 
+                              transparent calc(50% - 1px), 
+                              red, 
+                              transparent calc(50% + 1px));
+  pointer-events: none;
+  z-index: 1000;
 }
