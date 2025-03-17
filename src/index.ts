@@ -268,7 +268,6 @@ function load(pdfDocument: string) {
       {
         type: "custom",
         title: "Add Notes",
-        icon: "note",
         onPress: () => {
           // Toggle the sidebar visibility
           instance.setViewState(
@@ -640,10 +639,10 @@ function load(pdfDocument: string) {
             const notes: { pageIndex: number; text: string }[] = [];
             const renderNotes = () => {
               // Clear existing notes from the DOM
-              const existingNotes =
-                notesContainer.querySelectorAll(".custom-note");
-              existingNotes.forEach((note) => note.remove());
-
+              while (notesContainer.querySelector(".custom-note")) {
+                notesContainer.querySelector(".custom-note").remove();
+              }
+      
               // Get today's date in a readable format
               const today = new Date();
               const formattedDate = today.toLocaleDateString();
@@ -701,7 +700,9 @@ function load(pdfDocument: string) {
                 const editButton = document.createElement("button");
                 editButton.textContent = "Edit";
                 editButton.className = "PSPDFKit-Sidebar-Bookmarks-Button-Save"; // Using bookmark save button styling
-                editButton.addEventListener("click", (e) => {
+                
+                // Create a function for the edit button click handler
+                const handleEditClick = (e: Event) => {
                   e.stopPropagation(); // Prevent navigation when clicking edit
 
                   // Switch to edit mode
@@ -722,22 +723,30 @@ function load(pdfDocument: string) {
 
                   // Change edit button to save button
                   editButton.textContent = "Save";
-                  editButton.removeEventListener("click", editButton.onclick);
-                  editButton.addEventListener("click", (e) => {
+                  
+                  // Remove the edit click handler
+                  editButton.removeEventListener("click", handleEditClick);
+                  
+                  // Add the save click handler
+                  const handleSaveClick = (e: Event) => {
                     e.stopPropagation();
                     const newText = textArea.value.trim();
                     if (newText) {
                       notes[index].text = newText;
+                      // Instead of trying to manipulate the DOM directly,
+                      // just update the data and re-render everything
                       renderNotes();
                     }
-                  });
-
+                  };
+                  
+                  editButton.addEventListener("click", handleSaveClick);
+      
                   // Add cancel button
                   const cancelButton = document.createElement("button");
                   cancelButton.textContent = "Cancel";
-                  cancelButton.className =
-                    "PSPDFKit-Sidebar-Bookmarks-Button-Delete";
+                  cancelButton.className = "PSPDFKit-Sidebar-Bookmarks-Button-Delete";
                   cancelButton.style.marginRight = "5px";
+                  
                   cancelButton.addEventListener("click", (e) => {
                     e.stopPropagation();
                     renderNotes(); // Just re-render to cancel editing
@@ -745,8 +754,11 @@ function load(pdfDocument: string) {
 
                   // Add cancel button before edit button
                   buttonContainer.insertBefore(cancelButton, editButton);
-                });
-
+                };
+                
+                // Add the edit click handler
+                editButton.addEventListener("click", handleEditClick);
+      
                 // Add delete button
                 const deleteButton = document.createElement("button");
                 deleteButton.textContent = "Delete";
@@ -848,7 +860,9 @@ function load(pdfDocument: string) {
                   });
 
                   // Remove the editable card and re-render all notes
-                  notesContainer.removeChild(editableNoteCard);
+                  if (notesContainer.contains(editableNoteCard)) {
+                    notesContainer.removeChild(editableNoteCard);
+                  }
                   renderNotes();
                 }
               });
