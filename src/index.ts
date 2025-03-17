@@ -461,7 +461,7 @@ function load(pdfDocument: string) {
                 const pageElements = instance.contentDocument.querySelectorAll(
                   ".PSPDFKit-DocumentEditor-Thumbnails-Page-Image.PSPDFKit-DocumentEditor-Page"
                 );
-
+   
                 selectedPageIndexes.forEach((pageIndex: number) => {
                   if (pageIndex < pageElements.length) {
                     const pageElement = pageElements[pageIndex];
@@ -502,23 +502,38 @@ function load(pdfDocument: string) {
                   // Show a loading indicator
                   //   documentEditorUIHandler.showLoadingIndicator();
 
-                  const strikedPages = Array.from(
-                    instance.contentDocument.querySelectorAll(
-                      ".page-strike-through"
-                    )
-                  ) as Element[];
-                  const pagesToRemove = strikedPages
-                    .map((page) =>
-                      Array.from(page.parentNode?.children || []).indexOf(page)
-                    )
-                    .filter(
-                      (index) => index >= 0 && index < instance.totalPageCount
-                    );
+                  // const strikedPages = Array.from(
+                  //   instance.contentDocument.querySelectorAll(
+                  //     ".page-strike-through"
+                  //   )
+                  // ) as Element[];
+                  // const pagesToRemove = strikedPages
+                  //   .map((page) =>
+                  //     Array.from(page.parentNode?.children || []).indexOf(page)
+                  //   )
+                  //   .filter(
+                  //     (index) => index >= 0 && index < instance.totalPageCount
+                  //   );
 
-                  if (pagesToRemove.length === 0) {
-                    alert("No pages marked for deletion.");
-                    return;
-                  }
+                  // if (pagesToRemove.length === 0) {
+                  //   alert("No pages marked for deletion.");
+                  //   return;
+                  // }
+
+
+                  const pageElements = instance.contentDocument.querySelectorAll(
+                    ".PSPDFKit-DocumentEditor-Thumbnails-Page-Image.PSPDFKit-DocumentEditor-Page"
+                  );
+                  const pageStrikeThroughElements = instance.contentDocument.querySelectorAll(".page-strike-through");
+                  const pagesToRemove: number[] = [];
+                  
+                  pageStrikeThroughElements.forEach((pageElement: unknown) => {
+                    const pageIndex = Array.from(pageElements).indexOf(pageElement);
+                    
+                    if (pageIndex !== -1) {
+                      pagesToRemove.push(pageIndex);
+                    }
+                  });
 
                   // Sort page indices in descending order
                   let pagesToRemoveArray = [...pagesToRemove].sort(
