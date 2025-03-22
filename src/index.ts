@@ -3,6 +3,7 @@ let instance: any = null;
 let highlightedElement: HTMLElement | null = null;
 let objectUrl = "";
 let currentZoomPercentage = "100%";
+let smartRedaction = false
 const redactionTexts = [
   "when the 11yo SB was two years old",
   "Based on the evidence that was gathered during the course of the investigation, there was not sufficient evidence to substantiate the allegation",
@@ -268,6 +269,9 @@ function load(pdfDocument: string) {
         type: "custom",
         title: "Smart Redaction",
         onPress: () => {
+
+          smartRedaction = true
+
           // Create redactions for email addresses
           instance
             .createRedactionsBySearch(PSPDFKit.SearchPattern.EMAIL_ADDRESS, {
@@ -309,6 +313,7 @@ function load(pdfDocument: string) {
             })
             .then(function() {
               console.log("All redactions applied successfully");
+              smartRedaction = false
             });
         }
       },
@@ -1054,7 +1059,7 @@ async function addTextElement(annotation: {
   if (annotation.customData != null) {
     // Automatically adds comment as category
     commentInput.placeholder = annotation.customData.category;
-  } else {
+  } else if(smartRedaction == false) {
     (async function getUserComment() {
       const userComment = prompt("Please enter a comment");
       if (userComment === null || userComment.trim() === "") {
