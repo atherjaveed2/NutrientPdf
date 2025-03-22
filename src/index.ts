@@ -264,6 +264,54 @@ function load(pdfDocument: string) {
         title: "Download",
         icon: null,
       },
+      {
+        type: "custom",
+        title: "Smart Redaction",
+        onPress: () => {
+          // Create redactions for email addresses
+          instance
+            .createRedactionsBySearch(PSPDFKit.SearchPattern.EMAIL_ADDRESS, {
+              searchType: PSPDFKit.SearchType.PRESET,
+              searchInAnnotations: true,
+              annotationPreset: {
+                // overlayText: "Redacted"
+              }
+            })
+            .then(function (ids: any) {
+              console.log("Email redaction annotations added:", ids);
+              
+              // Create redactions for phone numbers
+              return instance.createRedactionsBySearch(PSPDFKit.SearchPattern.NORTH_AMERICAN_PHONE_NUMBER, {
+                searchType: PSPDFKit.SearchType.PRESET,
+                searchInAnnotations: true,
+                annotationPreset: {
+                  // overlayText: "Redacted"
+                }
+              });
+            })
+            .then(function (ids: any) {
+              console.log("Phone number redaction annotations added:", ids);
+              
+              // Create redactions for dates
+              return instance.createRedactionsBySearch(PSPDFKit.SearchPattern.DATE, {
+                searchType: PSPDFKit.SearchType.PRESET,
+                searchInAnnotations: true,
+                annotationPreset: {
+                  // overlayText: "Redacted"
+                }
+              });
+            })
+            .then(function (ids: any) {
+              console.log("Date redaction annotations added:", ids);
+              
+              // Apply all redactions
+              return instance.applyRedactions();
+            })
+            .then(function() {
+              console.log("All redactions applied successfully");
+            });
+        }
+      },
 
       {
         type: "custom",
